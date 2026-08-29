@@ -30,6 +30,16 @@ type PackageOption = {
   description: string | null
   price_per_pax: number
   is_active: boolean
+  category: 'local' | 'international'
+  currency: 'IDR' | 'USD'
+}
+
+type PackagePricing = {
+  id: string
+  package_id: string
+  min_pax: number
+  max_pax: number | null
+  price_per_pax: number
 }
 
 type Customer = {
@@ -112,6 +122,7 @@ function Customers({ initialCustomerId }: { initialCustomerId?: string }) {
   const [showTripModal, setShowTripModal] = useState(false)
   const [savingTrip, setSavingTrip] = useState(false)
   const [packages, setPackages] = useState<PackageOption[]>([])
+  const [packagePricing, setPackagePricing] = useState<PackagePricing[]>([])
 
   const [showFollowUpModal, setShowFollowUpModal] = useState(false)
   const [savingFollowUp, setSavingFollowUp] = useState(false)
@@ -543,27 +554,73 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 
   useEffect(() => {
     const loadPackages = async () => {
-      const { data, error } = await supabase
-        .from('packages')
-        .select(`
-          id,
-          name,
-          description,
-          price_per_pax,
-          is_active
-        `)
-        .eq('is_active', true)
-        .order('name', { ascending: true })
+      const [{ data: packageData, error: packageError }, { data: pricingData, error: pricingError }] = await Promise.all([
+        supabase
+          .from('packages')
+          .select('id, name, description, price_per_pax, is_active, category, currency')
+          .eq('is_active', true)
+          .order('name', { ascending: true }),
+        supabase
+          .from('package_pricing')
+          .select('id, package_id, min_pax, max_pax, price_per_pax')
+          .order('min_pax', { ascending: true }),
+      ])
 
-      if (error) {
-        console.error('Gagal memuat packages:', error)
+      if (packageError) {
+        console.error('Gagal memuat packages:', packageError)
         return
       }
 
-      setPackages((data ?? []) as PackageOption[])
+      if (pricingError) {
+        console.error('Gagal memuat pricing packages:', pricingError)
+        return
+      }
+
+      setPackages((packageData ?? []) as PackageOption[])
+      setPackagePricing((pricingData ?? []) as PackagePricing[])
     }
 
-    loadPackages()  }, [])
+    loadPackages()
+  }, [])
+
+  const formatPrice = (
+    value: number,
+    currency: 'IDR' | 'USD',
+  ) => {
+    if (currency === 'USD') {
+      return `$${value.toLocaleString('en-US')}`
+    }
+
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
+
+  const getPackageCurrency = (packageName: string) => {
+    const selectedPackage = packages.find(
+      (item) => item.name === packageName,
+    )
+
+    return selectedPackage?.currency ?? 'IDR'
+  }
+const getPackagePrice = (packageName: string, pax: number) => {
+    const selectedPackage = packages.find(
+      (item) => item.name === packageName,
+    )
+
+    if (!selectedPackage || pax < 1) return 0
+
+    const tier = packagePricing.find(
+      (item) =>
+        item.package_id === selectedPackage.id &&
+        pax >= item.min_pax &&
+        (item.max_pax === null || pax <= item.max_pax),
+    )
+
+    return Number(tier?.price_per_pax ?? selectedPackage.price_per_pax ?? 0)
+  }
 
   const [tripForm, setTripForm] = useState({
     packageName: 'VIP Package',
@@ -707,7 +764,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
             new Date(a.start_date).getTime(),
         )
 
-        return trips.map((trip: any) => {
+        return trips.map((trip: any, tripIndex: number) => {
           const payments = trip.payments ?? []
 
           const totalPaid = payments.reduce(
@@ -748,7 +805,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
               : '-',
             totalSpending: totalPrice,
             lastPackage: trip.package_name ?? '-',
-            type: trips.length > 1 ? 'Repeat' : 'New',
+            type: tripIndex === trips.length - 1 ? 'New' : 'Repeat',
             bookingDate: trip.booking_date ?? '',
             tripStart: trip.start_date ?? '',
             tripEnd: trip.end_date ?? '',
@@ -812,10 +869,21 @@ if (paymentAmount > selectedTripPaymentRemaining) {
   )
 
   const updateForm = (key: string, value: string) => {
-    setForm((current) => ({
-      ...current,
-      [key]: value,
-    }))
+    setForm((current) => {
+      const next = {
+        ...current,
+        [key]: value,
+      }
+
+      if (key === 'packageName' || key === 'pax') {
+        const pax = Number.parseInt(next.pax, 10) || 0
+        const price = getPackagePrice(next.packageName, pax)
+
+        next.pricePerPax = price > 0 ? String(price) : ''
+      }
+
+      return next
+    })
   }
 
   const resetForm = () => {
@@ -1469,25 +1537,34 @@ if (paymentAmount > selectedTripPaymentRemaining) {
               <div className="form-grid">
                 <label>
                   <span>Paket Trip *</span>
-                  <select
+                                    <select
                     value={form.packageName}
                     onChange={(event) =>
                       updateForm('packageName', event.target.value)
                     }
                     required
                   >
-                    {packages.map((item) => {
-                      const price = Number(item.price_per_pax)
+                    <optgroup label="🇮🇩 LOCAL TRIP">
+                      {packages
+                        .filter((item) => item.category === 'local')
+                        .map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name}
+                          </option>
+                        ))}
+                    </optgroup>
 
-                      return (
-                        <option key={item.id} value={item.name}>
-                          {item.name}
-                          {price >= 1000
-                            ? ` — Rp${price.toLocaleString('id-ID')}/pax`
-                            : ` — $${price}/pax`}
-                        </option>
-                      )
-                    })}
+                    <optgroup label="🌍 INTERNATIONAL TRIP">
+                      {packages
+                        .filter(
+                          (item) => item.category === 'international',
+                        )
+                        .map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name}
+                          </option>
+                        ))}
+                    </optgroup>
 
                     <option value="Lainnya">Lainnya</option>
                   </select>
@@ -1614,12 +1691,12 @@ if (paymentAmount > selectedTripPaymentRemaining) {
               <div className="trip-total-preview">
                 <div>
                   <span>Total Trip</span>
-                  <strong>{formatRupiah(totalPrice)}</strong>
+                  <strong>{formatPrice(totalPrice, getPackageCurrency(form.packageName))}</strong>
                 </div>
                 <div>
                   <span>{form.pax || 0} Pax</span>
                   <small>
-                    {formatRupiah(Number(form.pricePerPax || 0))} / pax
+                    {formatPrice(Number(form.pricePerPax || 0), getPackageCurrency(form.packageName))} / pax
                   </small>
                 </div>
               </div>
@@ -1687,7 +1764,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                 <label>
                   <span>Sisa Pembayaran</span>
                   <input
-                    value={formatRupiah(remainingPayment)}
+                    value={formatPrice(remainingPayment, getPackageCurrency(form.packageName))}
                     readOnly
                     className="input-readonly"
                   />
@@ -1697,18 +1774,18 @@ if (paymentAmount > selectedTripPaymentRemaining) {
               <div className="payment-summary">
                 <div>
                   <span>Total Harga</span>
-                  <strong>{formatRupiah(totalPrice)}</strong>
+                  <strong>{formatPrice(totalPrice, getPackageCurrency(form.packageName))}</strong>
                 </div>
                 <div>
                   <span>Sudah Dibayar</span>
                   <strong className="payment-paid">
-                    {formatRupiah(dpAmount)}
+                    {formatPrice(dpAmount, getPackageCurrency(form.packageName))}
                   </strong>
                 </div>
                 <div>
                   <span>Sisa</span>
                   <strong className="payment-remaining">
-                    {formatRupiah(remainingPayment)}
+                    {formatPrice(remainingPayment, getPackageCurrency(form.packageName))}
                   </strong>
                 </div>
               </div>
@@ -2564,24 +2641,33 @@ if (paymentAmount > selectedTripPaymentRemaining) {
               <div className="form-grid">
                 <label>
                   <span>Paket Trip</span>
-                  <select
+                                    <select
                     value={tripForm.packageName}
                     onChange={(event) =>
                       updateTripForm('packageName', event.target.value)
                     }
                   >
-                    {packages.map((item) => {
-                      const price = Number(item.price_per_pax)
+                    <optgroup label="🇮🇩 LOCAL TRIP">
+                      {packages
+                        .filter((item) => item.category === 'local')
+                        .map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name}
+                          </option>
+                        ))}
+                    </optgroup>
 
-                      return (
-                        <option key={item.id} value={item.name}>
-                          {item.name}
-                          {price >= 1000
-                            ? ` — Rp${price.toLocaleString('id-ID')}/pax`
-                            : ` — $${price}/pax`}
-                        </option>
-                      )
-                    })}
+                    <optgroup label="🌍 INTERNATIONAL TRIP">
+                      {packages
+                        .filter(
+                          (item) => item.category === 'international',
+                        )
+                        .map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name}
+                          </option>
+                        ))}
+                    </optgroup>
 
                     <option value="Custom Package">
                       Custom Package
@@ -2790,6 +2876,18 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 }
 
 export default Customers
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

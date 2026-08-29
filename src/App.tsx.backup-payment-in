@@ -7,6 +7,7 @@ import {
   History,
   Bell,
   Search,
+  Plus,
   ClipboardList,
   Wallet,
   CreditCard,
@@ -17,7 +18,6 @@ import {
   Menu,
   X,
   MapPinned,
-  WalletCards,
   RotateCcw,
 } from 'lucide-react'
 import Customers from './pages/Customers'
@@ -29,7 +29,6 @@ import Packages from './pages/Packages'
 import Reports from './pages/Reports'
 import SettingsPage from './pages/Settings'
 import RemainingPayments from './pages/RemainingPayments'
-import PaymentIn from './pages/PaymentIn'
 import RepeatOrders from './pages/RepeatOrders'
 import Login from './pages/Login'
 import { supabase } from './lib/supabase'
@@ -49,7 +48,6 @@ const navigation: NavItem[] = [
   { label: 'Upcoming Trips', icon: CalendarDays },
   { label: 'Trip History', icon: History },
   { label: 'Follow Up', icon: Bell, section: 'RELATIONSHIP' },
-  { label: 'Pembayaran Masuk', icon: WalletCards },
   { label: 'Sisa Pembayaran', icon: CreditCard },
   { label: 'Packages', icon: Package, section: 'MASTER DATA' },
   { label: 'Guides / Team', icon: UserRoundCog },
@@ -110,7 +108,7 @@ function formatDashboardCurrency(value: number) {
   }).format(value)
 }
 
-function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemainingPayments: () => void; onOpenPaymentIn: () => void }) {
+function Dashboard({ onOpenRemainingPayments }: { onOpenRemainingPayments: () => void }) {
   const [loading, setLoading] = useState(true)
 
   const [totalCustomers, setTotalCustomers] = useState(0)
@@ -408,6 +406,11 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             Rinjani Awesome.
           </p>
         </div>
+
+        <button className="primary-button">
+          <Plus size={18} />
+          Tambah Customer
+        </button>
       </div>
 
       <section className="stats-grid">
@@ -451,7 +454,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
           </div>
         </article>
 
-        <button type="button" className="stat-card stat-card--clickable" onClick={onOpenPaymentIn}>
+        <article className="stat-card">
           <div className="stat-card__top">
             <div>
               <p>Pembayaran Masuk</p>
@@ -471,7 +474,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             <span>Payment masuk</span>
             <small>bulan berjalan</small>
           </div>
-        </button>
+        </article>
 
         <button
           type="button"
@@ -1052,8 +1055,6 @@ return (
             <Customers initialCustomerId={customerIdToOpen} />
           ) : active === 'Repeat Order' ? (
             <RepeatOrders />
-          ) : active === 'Pembayaran Masuk' ? (
-            <PaymentIn />
           ) : active === 'Follow Up' ? (
             <FollowUp />
           ) : active === 'Ongoing Trips' ? (
@@ -1069,21 +1070,9 @@ return (
           ) : active === 'Settings' ? (
             <SettingsPage />
           ) : active === 'Sisa Pembayaran' ? (
-            <RemainingPayments
-              onOpenCustomer={(customerId) => {
-                setCustomerIdToOpen(customerId)
-                setActive('Customers')
-              }}
-            />
+            <RemainingPayments onOpenCustomer={(customerId) => { setCustomerIdToOpen(customerId); setActive('Customers') }} />
           ) : (
-            <Dashboard
-              onOpenRemainingPayments={() =>
-                setActive('Sisa Pembayaran')
-              }
-              onOpenPaymentIn={() =>
-                setActive('Pembayaran Masuk')
-              }
-            />
+            <Dashboard onOpenRemainingPayments={() => setActive('Sisa Pembayaran')} />
           )}
         </div>
       </main>
@@ -1092,11 +1081,6 @@ return (
 }
 
 export default App
-
-
-
-
-
 
 
 
