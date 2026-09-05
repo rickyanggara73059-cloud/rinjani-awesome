@@ -34,16 +34,8 @@ type PackageOption = {
   currency: 'IDR' | 'USD'
 }
 
-type PackagePricing = {
-  id: string
-  package_id: string
-  min_pax: number
-  max_pax: number | null
-  price_per_pax: number
-}
-
 type Customer = {
-  id: number
+  id: string
   tripId: string
   name: string
   country: string
@@ -122,7 +114,6 @@ function Customers({ initialCustomerId }: { initialCustomerId?: string }) {
   const [showTripModal, setShowTripModal] = useState(false)
   const [savingTrip, setSavingTrip] = useState(false)
   const [packages, setPackages] = useState<PackageOption[]>([])
-  const [packagePricing, setPackagePricing] = useState<PackagePricing[]>([])
 
   const [showFollowUpModal, setShowFollowUpModal] = useState(false)
   const [savingFollowUp, setSavingFollowUp] = useState(false)
@@ -175,6 +166,55 @@ function Customers({ initialCustomerId }: { initialCustomerId?: string }) {
       notes: '',
       status: 'Pending',
     })
+  }
+
+  const ensureCompletedTripFollowUp = async ({
+    tripId,
+    customerId,
+  }: {
+    tripId: string
+    customerId: string
+  }) => {
+    try {
+      const { data: existingFollowUp, error: lookupError } = await supabase
+        .from('follow_ups')
+        .select('id')
+        .eq('trip_id', tripId)
+        .maybeSingle()
+
+      if (lookupError) {
+        console.error(
+          'Trip berhasil Completed, tetapi Follow Up otomatis gagal diperiksa:',
+          lookupError,
+        )
+        return
+      }
+
+      if (existingFollowUp) return
+
+      const { error: insertError } = await supabase
+        .from('follow_ups')
+        .insert({
+          customer_id: customerId,
+          trip_id: tripId,
+          follow_up_date: new Date().toISOString().slice(0, 10),
+          subject: 'Follow Up Trip Selesai',
+          notes: 'Follow Up dibuat otomatis karena status trip berubah menjadi Completed.',
+          status: 'Pending',
+        })
+
+      if (insertError) {
+        console.error(
+          'Trip berhasil Completed, tetapi Follow Up otomatis gagal dibuat:',
+          insertError,
+        )
+      }
+    } catch (error) {
+      console.error(
+        'Trip berhasil Completed, tetapi terjadi kesalahan saat membuat Follow Up otomatis:',
+        error,
+      )
+    }
   }
 
   const handleUpdateCustomer = async (event: FormEvent) => {
@@ -554,30 +594,18 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 
   useEffect(() => {
     const loadPackages = async () => {
-      const [{ data: packageData, error: packageError }, { data: pricingData, error: pricingError }] = await Promise.all([
-        supabase
-          .from('packages')
-          .select('id, name, description, price_per_pax, is_active, category, currency')
-          .eq('is_active', true)
-          .order('name', { ascending: true }),
-        supabase
-          .from('package_pricing')
-          .select('id, package_id, min_pax, max_pax, price_per_pax')
-          .order('min_pax', { ascending: true }),
-      ])
+      const { data: packageData, error: packageError } = await supabase
+        .from('packages')
+        .select('id, name, description, price_per_pax, is_active, category, currency')
+        .eq('is_active', true)
+        .order('name', { ascending: true })
 
       if (packageError) {
         console.error('Gagal memuat packages:', packageError)
         return
       }
 
-      if (pricingError) {
-        console.error('Gagal memuat pricing packages:', pricingError)
-        return
-      }
-
       setPackages((packageData ?? []) as PackageOption[])
-      setPackagePricing((pricingData ?? []) as PackagePricing[])
     }
 
     loadPackages()
@@ -605,23 +633,6 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 
     return selectedPackage?.currency ?? 'IDR'
   }
-const getPackagePrice = (packageName: string, pax: number) => {
-    const selectedPackage = packages.find(
-      (item) => item.name === packageName,
-    )
-
-    if (!selectedPackage || pax < 1) return 0
-
-    const tier = packagePricing.find(
-      (item) =>
-        item.package_id === selectedPackage.id &&
-        pax >= item.min_pax &&
-        (item.max_pax === null || pax <= item.max_pax),
-    )
-
-    return Number(tier?.price_per_pax ?? selectedPackage.price_per_pax ?? 0)
-  }
-
   const [tripForm, setTripForm] = useState({
     packageName: 'VIP Package',
     customPackage: '',
@@ -869,21 +880,10 @@ const getPackagePrice = (packageName: string, pax: number) => {
   )
 
   const updateForm = (key: string, value: string) => {
-    setForm((current) => {
-      const next = {
-        ...current,
-        [key]: value,
-      }
-
-      if (key === 'packageName' || key === 'pax') {
-        const pax = Number.parseInt(next.pax, 10) || 0
-        const price = getPackagePrice(next.packageName, pax)
-
-        next.pricePerPax = price > 0 ? String(price) : ''
-      }
-
-      return next
-    })
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }))
   }
 
   const resetForm = () => {
@@ -915,15 +915,15 @@ const getPackagePrice = (packageName: string, pax: number) => {
     if (!selectedCustomer) return
 
     try {
-      const { data: latestTrip, error: lookupError } = await supabase
+      const { data: selectedTrip, error: lookupError } = await supabase
   .from('trips')
-  .select('id')
+  .select('id, customer_id')
   .eq('id', selectedCustomer.tripId)
   .maybeSingle()
 
       if (lookupError) throw lookupError
 
-      if (!latestTrip) {
+      if (!selectedTrip) {
         alert('Trip customer tidak ditemukan.')
         return
       }
@@ -933,9 +933,16 @@ const getPackagePrice = (packageName: string, pax: number) => {
         .update({
           status,
         })
-        .eq('id', latestTrip.id)
+        .eq('id', selectedTrip.id)
 
       if (updateError) throw updateError
+
+      if (status === 'Completed') {
+        await ensureCompletedTripFollowUp({
+          tripId: selectedTrip.id,
+          customerId: selectedTrip.customer_id,
+        })
+      }
 
       setSelectedCustomer((current) =>
         current
@@ -996,6 +1003,9 @@ const getPackagePrice = (packageName: string, pax: number) => {
       tripForm.packageName === 'Custom Package'
         ? tripForm.customPackage.trim()
         : tripForm.packageName
+    const selectedPackage = packages.find(
+      (item) => item.name === packageName,
+    )
 
     if (!packageName) {
       alert('Nama paket wajib diisi.')
@@ -1016,7 +1026,7 @@ const getPackagePrice = (packageName: string, pax: number) => {
         .from('trips')
         .insert({
           customer_id: selectedCustomer.id,
-          package_id: null,
+          package_id: selectedPackage?.id ?? null,
           package_name: packageName,
           booking_date: tripForm.bookingDate || null,
           start_date: tripForm.tripStart,
@@ -1048,6 +1058,13 @@ const getPackagePrice = (packageName: string, pax: number) => {
       if (paymentError) {
         await supabase.from('trips').delete().eq('id', trip.id)
         throw paymentError
+      }
+
+      if (tripForm.tripStatus === 'Completed') {
+        await ensureCompletedTripFollowUp({
+          tripId: trip.id,
+          customerId: selectedCustomer.id,
+        })
       }
 
       resetTripForm()
@@ -1171,6 +1188,13 @@ const getPackagePrice = (packageName: string, pax: number) => {
         await supabase.from('trips').delete().eq('id', trip.id)
         await supabase.from('customers').delete().eq('id', customer.id)
         throw paymentError
+      }
+
+      if (form.tripStatus === 'Completed') {
+        await ensureCompletedTripFollowUp({
+          tripId: trip.id,
+          customerId: customer.id,
+        })
       }
 
       resetForm()
@@ -2547,6 +2571,7 @@ const getPackagePrice = (packageName: string, pax: number) => {
                       }
                     >
                       <option value="Pending">Pending</option>
+                      <option value="Contacted">Contacted</option>
                       <option value="Completed">Completed</option>
                       <option value="Cancelled">Cancelled</option>
                     </select>

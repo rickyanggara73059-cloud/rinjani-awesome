@@ -3,15 +3,18 @@ import {
   Bell,
   CheckCircle2,
   Clock3,
+  Mail,
+  MessageCircle,
   Search,
   XCircle,
 } from 'lucide-react'
+import { useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 type FollowUp = {
-  id: number
-  customer_id: number
-  trip_id: number | null
+  id: string
+  customer_id: string
+  trip_id: string | null
   follow_up_date: string
   subject: string
   notes: string | null
@@ -20,6 +23,10 @@ type FollowUp = {
     name: string
     country: string | null
     whatsapp: string | null
+    email: string | null
+  } | null
+  trip?: {
+    package_name: string | null
   } | null
 }
 
@@ -42,6 +49,60 @@ function FollowUp() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('Semua')
+  const hasRunCompletedTripBackfill = useRef(false)
+
+  const backfillCompletedTripFollowUps = async () => {
+    try {
+      const { data: completedTrips, error: tripsError } = await supabase
+        .from('trips')
+        .select('id, customer_id')
+        .eq('status', 'Completed')
+
+      if (tripsError) throw tripsError
+
+      const trips = completedTrips ?? []
+
+      if (trips.length === 0) return
+
+      const tripIds = trips.map((trip) => trip.id)
+      const { data: existingFollowUps, error: followUpsError } = await supabase
+        .from('follow_ups')
+        .select('trip_id')
+        .in('trip_id', tripIds)
+
+      if (followUpsError) throw followUpsError
+
+      const existingTripIds = new Set(
+        (existingFollowUps ?? [])
+          .map((followUp) => followUp.trip_id)
+          .filter((tripId): tripId is string => Boolean(tripId)),
+      )
+
+      const missingFollowUps = trips
+        .filter((trip) => !existingTripIds.has(trip.id))
+        .map((trip) => ({
+          customer_id: trip.customer_id,
+          trip_id: trip.id,
+          follow_up_date: new Date().toISOString().slice(0, 10),
+          subject: 'Follow Up Trip Selesai',
+          notes: 'Follow Up otomatis dibuat karena Trip telah selesai.',
+          status: 'Pending',
+        }))
+
+      if (missingFollowUps.length === 0) return
+
+      const { error: insertError } = await supabase
+        .from('follow_ups')
+        .insert(missingFollowUps)
+
+      if (insertError) throw insertError
+    } catch (error) {
+      console.error(
+        'Gagal melakukan backfill Follow Up untuk trip Completed:',
+        error,
+      )
+    }
+  }
 
   const loadFollowUps = async () => {
     setLoading(true)
@@ -59,7 +120,11 @@ function FollowUp() {
         customer:customers (
           name,
           country,
-          whatsapp
+          whatsapp,
+          email
+        ),
+        trip:trips (
+          package_name
         )
       `)
       .order('follow_up_date', { ascending: true })
@@ -77,7 +142,16 @@ function FollowUp() {
   }
 
   useEffect(() => {
-    loadFollowUps()
+    if (hasRunCompletedTripBackfill.current) return
+
+    hasRunCompletedTripBackfill.current = true
+
+    const initializeFollowUps = async () => {
+      await backfillCompletedTripFollowUps()
+      await loadFollowUps()
+    }
+
+    void initializeFollowUps()
   }, [])
 
   const filteredFollowUps = useMemo(() => {
@@ -86,11 +160,17 @@ function FollowUp() {
     return followUps.filter((item) => {
       const customerName = item.customer?.name ?? ''
       const subject = item.subject ?? ''
+      const packageName = item.trip?.package_name ?? ''
+      const whatsapp = item.customer?.whatsapp ?? ''
+      const email = item.customer?.email ?? ''
 
       const matchesSearch =
         !keyword ||
         customerName.toLowerCase().includes(keyword) ||
-        subject.toLowerCase().includes(keyword)
+        subject.toLowerCase().includes(keyword) ||
+        packageName.toLowerCase().includes(keyword) ||
+        whatsapp.toLowerCase().includes(keyword) ||
+        email.toLowerCase().includes(keyword)
 
       const matchesStatus =
         statusFilter === 'Semua' || item.status === statusFilter
@@ -107,6 +187,14 @@ function FollowUp() {
     (item) => item.status === 'Completed',
   ).length
 
+  const contactedCount = followUps.filter(
+    (item) => item.status === 'Contacted',
+  ).length
+
+  const cancelledCount = followUps.filter(
+    (item) => item.status === 'Cancelled',
+  ).length
+
   const today = new Date().toISOString().slice(0, 10)
 
   const todayCount = followUps.filter(
@@ -114,7 +202,7 @@ function FollowUp() {
       item.follow_up_date === today && item.status === 'Pending',
   ).length
 
-  const updateStatus = async (id: number, status: string) => {
+  const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from('follow_ups')
       .update({ status })
@@ -194,6 +282,24 @@ function FollowUp() {
         <article className="stat-card">
           <div className="stat-card__top">
             <div>
+              <p>Contacted</p>
+              <h2>{contactedCount}</h2>
+            </div>
+
+            <div className="stat-icon">
+              <MessageCircle size={21} />
+            </div>
+          </div>
+
+          <div className="stat-card__bottom">
+            <span>Sudah dihubungi</span>
+            <small>menunggu penyelesaian</small>
+          </div>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-card__top">
+            <div>
               <p>Selesai</p>
               <h2>{completedCount}</h2>
             </div>
@@ -206,6 +312,24 @@ function FollowUp() {
           <div className="stat-card__bottom">
             <span>Completed</span>
             <small>follow up selesai</small>
+          </div>
+        </article>
+
+        <article className="stat-card">
+          <div className="stat-card__top">
+            <div>
+              <p>Cancelled</p>
+              <h2>{cancelledCount}</h2>
+            </div>
+
+            <div className="stat-icon">
+              <XCircle size={21} />
+            </div>
+          </div>
+
+          <div className="stat-card__bottom">
+            <span>Dibatalkan</span>
+            <small>tidak perlu ditindaklanjuti</small>
           </div>
         </article>
 
@@ -259,6 +383,7 @@ function FollowUp() {
           >
             <option value="Semua">Semua Status</option>
             <option value="Pending">Pending</option>
+            <option value="Contacted">Contacted</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
@@ -284,6 +409,7 @@ function FollowUp() {
               <thead>
                 <tr>
                   <th>Customer</th>
+                  <th>Trip</th>
                   <th>Keperluan</th>
                   <th>Tanggal</th>
                   <th>Catatan</th>
@@ -309,8 +435,20 @@ function FollowUp() {
                           <small>
                             {item.customer?.country ?? '-'}
                           </small>
+
+                          <small>
+                            WhatsApp: {item.customer?.whatsapp || '-'}
+                          </small>
+
+                          <small>
+                            Email: {item.customer?.email || '-'}
+                          </small>
                         </div>
                       </div>
+                    </td>
+
+                    <td>
+                      <strong>{item.trip?.package_name ?? '-'}</strong>
                     </td>
 
                     <td>
@@ -341,7 +479,44 @@ function FollowUp() {
 
                     <td>
                       <div className="followup-actions">
+                        {item.customer?.whatsapp && (
+                          <a
+                            className="followup-action"
+                            href={`https://wa.me/${item.customer.whatsapp.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Hubungi via WhatsApp"
+                            aria-label={`Hubungi ${item.customer.name} via WhatsApp`}
+                          >
+                            <MessageCircle size={16} />
+                          </a>
+                        )}
+
+                        {item.customer?.email && (
+                          <a
+                            className="followup-action"
+                            href={`mailto:${item.customer.email}`}
+                            title="Kirim email"
+                            aria-label={`Kirim email ke ${item.customer.name}`}
+                          >
+                            <Mail size={16} />
+                          </a>
+                        )}
+
                         {item.status === 'Pending' && (
+                          <button
+                            type="button"
+                            className="followup-action"
+                            onClick={() =>
+                              updateStatus(item.id, 'Contacted')
+                            }
+                            title="Tandai sudah dihubungi"
+                          >
+                            <MessageCircle size={16} />
+                          </button>
+                        )}
+
+                        {item.status === 'Contacted' && (
                           <button
                             type="button"
                             className="followup-action followup-action--complete"
@@ -354,21 +529,8 @@ function FollowUp() {
                           </button>
                         )}
 
-                        {item.status !== 'Cancelled' &&
-                          item.status !== 'Pending' && (
-                            <button
-                              type="button"
-                              className="followup-action"
-                              onClick={() =>
-                                updateStatus(item.id, 'Pending')
-                              }
-                              title="Kembalikan ke Pending"
-                            >
-                              <Clock3 size={16} />
-                            </button>
-                          )}
-
-                        {item.status !== 'Cancelled' && (
+                        {(item.status === 'Pending' ||
+                          item.status === 'Contacted') && (
                           <button
                             type="button"
                             className="followup-action followup-action--cancel"
