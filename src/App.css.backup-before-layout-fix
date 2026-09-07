@@ -8530,909 +8530,658 @@ body {
 }
 
 
-/* =========================================================
-   RINJANI AWESOME - CINEMATIC PHOTO BACKGROUND
-   SAFE VERSION - DOES NOT HIDE LOGIN DOM
-   ========================================================= */
+/* ============================================================
+   RINJANI AWESOME
+   REAL RINJANI PHOTO ENVIRONMENT
+   ============================================================ */
 
 .rinjani-3d-login,
 .rinjani-command-scene {
   position: relative !important;
-  width: 100% !important;
-  min-height: 100vh !important;
+
+  width: 100vw !important;
+  max-width: 100vw !important;
+
+  min-height: 100dvh !important;
+  height: 100dvh !important;
+
   overflow: hidden !important;
 
-  background-image:
+  background:
     linear-gradient(
       180deg,
-      rgba(255, 232, 190, 0.08) 0%,
-      rgba(13, 52, 36, 0.12) 48%,
-      rgba(4, 20, 13, 0.42) 100%
+      rgba(255,236,190,.04),
+      rgba(7,52,35,.16)
     ),
-    url("/rinjani-sunset.jpg") !important;
+    url("/rinjani-sunset.jpg") center center / cover no-repeat !important;
 
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-
-  transform: none !important;
+  color: #173d2b !important;
 }
 
-/* Landscape lama tidak lagi membuat background sendiri */
+
+/* ============================================================
+   REAL PHOTO DEPTH
+   ============================================================ */
+
+.rinjani-3d-login::before {
+  content: "";
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,236,192,.08) 0%,
+      rgba(255,199,119,.04) 28%,
+      rgba(8,64,42,.05) 55%,
+      rgba(4,43,28,.20) 100%
+    );
+
+  mix-blend-mode: normal;
+}
+
+
+/* ============================================================
+   REMOVE OLD CSS MOUNTAIN
+   ============================================================ */
+
 .rinjani-landscape {
-  background: transparent !important;
-  background-image: none !important;
-  transform: none !important;
-  opacity: 1 !important;
-}
-
-/* Hilangkan hanya efek dekorasi pseudo lama */
-.rinjani-landscape::before,
-.rinjani-landscape::after {
-  pointer-events: none !important;
-}
-
-/* Jangan sembunyikan children landscape */
-
-/* =========================================================
-   BRAND
-   ========================================================= */
-
-.rinjani-logo,
-.rinjani-brand,
-.rinjani-branding,
-.login-brand,
-.brand-logo {
-  z-index: 100 !important;
-}
-
-/* Logo lebih besar */
-.rinjani-logo img,
-.rinjani-brand img,
-.rinjani-branding img,
-.login-brand img,
-.brand-logo img {
-  width: 60px !important;
-  height: 60px !important;
-  object-fit: contain !important;
-}
-
-/* Nama brand */
-.rinjani-logo h1,
-.rinjani-logo h2,
-.rinjani-brand h1,
-.rinjani-brand h2,
-.rinjani-branding h1,
-.rinjani-branding h2,
-.login-brand h1,
-.login-brand h2,
-.brand-logo h1,
-.brand-logo h2 {
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.14em !important;
-}
-
-/* =========================================================
-   GLASS UI
-   ========================================================= */
-
-.command-monitor {
-  z-index: 30 !important;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(18, 75, 49, 0.82),
-      rgba(6, 45, 30, 0.72)
-    ) !important;
-
-  border: 1px solid rgba(190, 225, 196, 0.38) !important;
-
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-
-  box-shadow:
-    0 25px 70px rgba(0,0,0,.30),
-    inset 0 1px 0 rgba(255,255,255,.16) !important;
-}
-
-.floating-card,
-.floating-task,
-.floating-calendar {
-  z-index: 40 !important;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(16, 78, 51, 0.88),
-      rgba(6, 49, 33, 0.78)
-    ) !important;
-
-  border: 1px solid rgba(190, 225, 196, 0.40) !important;
-
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-
-  box-shadow:
-    0 15px 40px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.15) !important;
-}
-
-/* =========================================================
-   ENTER WORKSPACE
-   ========================================================= */
-
-.enter-command {
-  z-index: 60 !important;
-
-  background: rgba(255,255,255,.96) !important;
-  color: #164d37 !important;
-
-  box-shadow:
-    0 18px 50px rgba(0,0,0,.30) !important;
-}
-
-/* =========================================================
-   DESKTOP
-   ========================================================= */
-
-@media (min-width: 901px) {
-
-  .rinjani-logo,
-  .rinjani-brand,
-  .rinjani-branding,
-  .login-brand,
-  .brand-logo {
-    position: fixed !important;
-    top: 28px !important;
-    left: 42px !important;
-  }
-
-  .command-monitor {
-    position: fixed !important;
-    left: 34% !important;
-    top: 27% !important;
-    width: min(570px, 38vw) !important;
-  }
-
-  .workspace-active .rinjani-login-panel {
-    position: fixed !important;
-    top: 50% !important;
-    right: 5vw !important;
-    left: auto !important;
-
-    width: 390px !important;
-    max-width: 390px !important;
-
-    transform: translateY(-50%) !important;
-    z-index: 80 !important;
-  }
-
-  .workspace-active .rinjani-login-card {
-    width: 100% !important;
-    max-width: 390px !important;
-  }
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 900px) {
-
-  .rinjani-3d-login,
-  .rinjani-command-scene {
-    min-height: 100svh !important;
-    height: 100svh !important;
-    background-position: 60% center !important;
-  }
-
-  .rinjani-logo,
-  .rinjani-brand,
-  .rinjani-branding,
-  .login-brand,
-  .brand-logo {
-    position: fixed !important;
-    top: 18px !important;
-    left: 18px !important;
-  }
-
-  .rinjani-logo img,
-  .rinjani-brand img,
-  .rinjani-branding img,
-  .login-brand img,
-  .brand-logo img {
-    width: 50px !important;
-    height: 50px !important;
-  }
-
-  .command-monitor {
-    position: fixed !important;
-    left: 50% !important;
-    top: 34% !important;
-    width: min(90vw, 420px) !important;
-    transform: translateX(-50%) !important;
-  }
-
-  .workspace-active .rinjani-login-panel {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    max-width: none !important;
-    transform: none !important;
-  }
-
-  .workspace-active .rinjani-login-card {
-    width: calc(100vw - 32px) !important;
-    max-width: 390px !important;
-  }
-}
-
-
-/* =========================================================
-   RINJANI AWESOME
-   CLEAN CINEMATIC BACKGROUND
-   ========================================================= */
-
-html,
-body,
-#root {
-  width: 100%;
-  min-width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-/* Scene utama */
-.rinjani-3d-login,
-.rinjani-command-scene {
   position: fixed !important;
+
   inset: 0 !important;
 
   width: 100vw !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
+  height: 100dvh !important;
 
-  overflow: hidden !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
 
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,0.02) 0%,
-      rgba(0,0,0,0.05) 55%,
-      rgba(0,20,12,0.18) 100%
-    ),
-    url("/rinjani-background.jpg") !important;
-
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
+  z-index: 1 !important;
 
   transform: none !important;
-}
 
-/* =========================================================
-   MATIKAN FOTO / LANDSCAPE LAMA
-   ========================================================= */
-
-.rinjani-landscape {
-  position: absolute !important;
-  inset: 0 !important;
-
-  width: 100% !important;
-  height: 100% !important;
-
-  background: transparent !important;
-  background-image: none !important;
-
-  transform: none !important;
   opacity: 1 !important;
 
   pointer-events: none !important;
+
+  overflow: hidden !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,220,151,.04),
+      rgba(7,61,39,.10)
+    ),
+    url("/rinjani-sunset.jpg") center center / cover no-repeat !important;
+
+  animation:
+    rinjaniPhotoFloat 18s ease-in-out infinite alternate !important;
 }
 
-/* Semua bentuk gunung CSS lama dihilangkan */
+
+/* ============================================================
+   HIDE PROCEDURAL MOUNTAIN ELEMENTS
+   ============================================================ */
+
 .rinjani-landscape > * {
   display: none !important;
 }
 
-/* =========================================================
-   HILANGKAN SEMUA ELEMEN VISUAL YANG MENUTUPI FOTO
-   ========================================================= */
 
-/* Command Center */
-.command-monitor {
-  display: none !important;
-}
+/* ============================================================
+   CINEMATIC PHOTO OVERLAY
+   ============================================================ */
 
-/* Semua kartu statistik */
-.floating-card,
-.floating-task,
-.floating-calendar {
-  display: none !important;
-}
+.rinjani-landscape::before {
+  content: "";
 
-/* Dekorasi tambahan */
-.command-scene__mountain,
-.command-scene__lake,
-.command-scene__forest,
-.command-scene__mist,
-.command-scene__sun,
-.command-scene__ground,
-.command-scene__grid,
-.command-scene__terrain {
-  display: none !important;
-}
+  position: absolute;
 
-/* Label bawah / dekorasi scene */
-.rinjani-scene-label,
-.rinjani-location-label,
-.rinjani-footer-label,
-.scene-label,
-.scene-footer {
-  display: none !important;
-}
-
-/* =========================================================
-   LOGO / BRAND
-   ========================================================= */
-
-.rinjani-logo,
-.rinjani-brand,
-.rinjani-branding,
-.login-brand,
-.brand-logo {
-  z-index: 100 !important;
-}
-
-/* Logo dibuat lebih jelas */
-.rinjani-logo img,
-.rinjani-brand img,
-.rinjani-branding img,
-.login-brand img,
-.brand-logo img {
-  width: 64px !important;
-  height: 64px !important;
-
-  min-width: 64px !important;
-  min-height: 64px !important;
-
-  object-fit: contain !important;
-}
-
-/* Posisi branding */
-.rinjani-logo,
-.rinjani-brand,
-.rinjani-branding,
-.login-brand,
-.brand-logo {
-  display: flex !important;
-  align-items: center !important;
-  gap: 14px !important;
-}
-
-/* Nama Rinjani Awesome */
-.rinjani-logo h1,
-.rinjani-logo h2,
-.rinjani-brand h1,
-.rinjani-brand h2,
-.rinjani-branding h1,
-.rinjani-branding h2,
-.login-brand h1,
-.login-brand h2,
-.brand-logo h1,
-.brand-logo h2 {
-  font-size: 19px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.15em !important;
-}
-
-/* =========================================================
-   ENTER WORKSPACE
-   Tetap dipertahankan karena ini tombol masuk login
-   ========================================================= */
-
-.enter-command {
-  z-index: 200 !important;
-
-  background: rgba(255,255,255,0.94) !important;
-
-  border: 1px solid rgba(255,255,255,0.9) !important;
-
-  box-shadow:
-    0 15px 45px rgba(0,0,0,0.25) !important;
-
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-}
-
-/* =========================================================
-   LOGIN PANEL
-   Jangan disembunyikan.
-   Tetap muncul setelah Enter Workspace.
-   ========================================================= */
-
-.rinjani-login-panel {
-  z-index: 300 !important;
-}
-
-/* =========================================================
-   DESKTOP
-   ========================================================= */
-
-@media (min-width: 901px) {
-
-  .rinjani-logo,
-  .rinjani-brand,
-  .rinjani-branding,
-  .login-brand,
-  .brand-logo {
-    position: fixed !important;
-
-    top: 28px !important;
-    left: 42px !important;
-  }
-
-  .enter-command {
-    position: fixed !important;
-
-    left: 50% !important;
-    bottom: 8% !important;
-
-    transform: translateX(-50%) !important;
-  }
-
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 900px) {
-
-  .rinjani-3d-login,
-  .rinjani-command-scene {
-    width: 100vw !important;
-    height: 100svh !important;
-    min-height: 100svh !important;
-
-    background-position: 58% center !important;
-  }
-
-  .rinjani-logo,
-  .rinjani-brand,
-  .rinjani-branding,
-  .login-brand,
-  .brand-logo {
-    position: fixed !important;
-
-    top: 18px !important;
-    left: 18px !important;
-  }
-
-  .rinjani-logo img,
-  .rinjani-brand img,
-  .rinjani-branding img,
-  .login-brand img,
-  .brand-logo img {
-    width: 52px !important;
-    height: 52px !important;
-
-    min-width: 52px !important;
-    min-height: 52px !important;
-  }
-
-  .enter-command {
-    position: fixed !important;
-
-    left: 50% !important;
-    bottom: 7% !important;
-
-    transform: translateX(-50%) !important;
-  }
-}
-
-
-/* =========================================================
-   FINAL RINJANI PHOTO BACKGROUND
-   ========================================================= */
-
-.rinjani-3d-login {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
-  overflow: hidden !important;
-
-  background-image: url("/rinjani-background.jpg") !important;
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-
-  transform: none !important;
-}
-
-/* Scene lama dibuat transparan */
-.rinjani-command-scene,
-.command-environment {
-  background: transparent !important;
-  background-image: none !important;
-}
-
-/* Hilangkan landscape CSS */
-.rinjani-landscape,
-.rinjani-3d-stars,
-.scene-light,
-.command-floor,
-.command-particles {
-  display: none !important;
-}
-
-/* Hilangkan semua bentuk gunung/danau CSS */
-.rinjani-mountain,
-.rinjani-mountain--back,
-.rinjani-mountain--main,
-.rinjani-mountain--foreground,
-.rinjani-summit,
-.rinjani-ridge,
-.rinjani-snow-cap,
-.rinjani-caldera,
-.rinjani-caldera-inner,
-.rinjani-valley,
-.rinjani-lake,
-.rinjani-mist,
-.rinjani-trees {
-  display: none !important;
-}
-
-/* Hilangkan dashboard 3D */
-.command-monitor,
-.floating-card,
-.floating-task,
-.floating-calendar {
-  display: none !important;
-}
-
-/* Hilangkan efek visual tambahan */
-.floor-grid,
-.floor-glow {
-  display: none !important;
-}
-
-/* =========================================================
-   LOGO
-   ========================================================= */
-
-.rinjani-login-header {
-  position: fixed !important;
-  top: 28px !important;
-  left: 40px !important;
-  z-index: 100 !important;
-}
-
-.rinjani-logo {
-  display: flex !important;
-  align-items: center !important;
-  gap: 14px !important;
-  background: transparent !important;
-}
-
-.rinjani-logo img {
-  width: 64px !important;
-  height: 64px !important;
-  min-width: 64px !important;
-  min-height: 64px !important;
-  object-fit: contain !important;
-}
-
-/* =========================================================
-   ENTER WORKSPACE
-   ========================================================= */
-
-.enter-command {
-  position: fixed !important;
-  left: 50% !important;
-  bottom: 8% !important;
-  transform: translateX(-50%) !important;
-  z-index: 200 !important;
-
-  background: rgba(255, 255, 255, 0.96) !important;
-  border: 1px solid rgba(255, 255, 255, 0.95) !important;
-
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28) !important;
-
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-}
-
-/* =========================================================
-   LOGIN
-   ========================================================= */
-
-.rinjani-login-panel {
-  z-index: 500 !important;
-}
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 900px) {
-
-  .rinjani-3d-login {
-    width: 100vw !important;
-    height: 100svh !important;
-    min-height: 100svh !important;
-    background-position: center center !important;
-  }
-
-  .rinjani-login-header {
-    top: 18px !important;
-    left: 18px !important;
-  }
-
-  .rinjani-logo img {
-    width: 52px !important;
-    height: 52px !important;
-    min-width: 52px !important;
-    min-height: 52px !important;
-  }
-
-  .enter-command {
-    bottom: 7% !important;
-  }
-}
-
-
-
-/* =========================================================
-   RINJANI AWESOME — BRANDING REFINEMENT
-   ========================================================= */
-
-/* Header */
-.rinjani-login-header {
-  position: fixed !important;
-
-  top: 32px !important;
-  left: 40px !important;
-
-  z-index: 500 !important;
-
-  display: flex !important;
-  align-items: center !important;
-
-  width: auto !important;
-  height: auto !important;
-
-  background: transparent !important;
-}
-
-/* Brand utama */
-.rinjani-logo {
-  display: flex !important;
-
-  flex-direction: row !important;
-  align-items: center !important;
-
-  gap: 16px !important;
-
-  width: auto !important;
-  height: auto !important;
-
-  padding: 0 !important;
-  margin: 0 !important;
-
-  background: transparent !important;
-
-  border: 0 !important;
-}
-
-/* Logo icon */
-.rinjani-logo img {
-  display: block !important;
-
-  width: 62px !important;
-  height: 62px !important;
-
-  min-width: 62px !important;
-  min-height: 62px !important;
-
-  max-width: 62px !important;
-  max-height: 62px !important;
-
-  object-fit: contain !important;
-
-  border-radius: 15px !important;
-
-  filter:
-    drop-shadow(0 8px 16px rgba(0,0,0,.28)) !important;
-}
-
-/* Area teks di sebelah logo */
-.rinjani-logo > div {
-  display: flex !important;
-
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  justify-content: center !important;
-
-  gap: 4px !important;
-
-  min-width: 210px !important;
-}
-
-/* Nama brand */
-.rinjani-logo strong {
-  display: block !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  color: #123f31 !important;
-
-  font-family: Georgia, "Times New Roman", serif !important;
-
-  font-size: 18px !important;
-  line-height: 1.1 !important;
-
-  font-weight: 700 !important;
-
-  letter-spacing: .16em !important;
-
-  white-space: nowrap !important;
-
-  text-shadow:
-    0 1px 5px rgba(255,255,255,.72) !important;
-}
-
-/* Subtitle */
-.rinjani-logo span {
-  display: block !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  color: #285f4c !important;
-
-  font-size: 8px !important;
-  line-height: 1.2 !important;
-
-  font-weight: 600 !important;
-
-  letter-spacing: .22em !important;
-
-  white-space: nowrap !important;
-
-  opacity: .92 !important;
-
-  text-shadow:
-    0 1px 5px rgba(255,255,255,.72) !important;
-}
-
-/* =========================================================
-   PREMIUM VERTICAL SEPARATOR
-   ========================================================= */
-
-.rinjani-logo::after {
-  content: "" !important;
-
-  position: absolute !important;
-
-  left: 78px !important;
-  top: 5px !important;
-
-  width: 1px !important;
-  height: 52px !important;
+  inset: 0;
 
   background:
     linear-gradient(
-      to bottom,
-      transparent,
-      rgba(255,255,255,.85),
-      transparent
-    ) !important;
+      90deg,
+      rgba(255,244,220,.05) 0%,
+      rgba(255,231,188,.00) 40%,
+      rgba(7,47,32,.12) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255,225,171,.06) 0%,
+      transparent 45%,
+      rgba(5,48,31,.20) 100%
+    );
 
-  opacity: .8 !important;
+  z-index: 2;
 }
 
-/* =========================================================
-   DESKTOP
-   ========================================================= */
+
+/* ============================================================
+   SUNSET LIGHT
+   ============================================================ */
+
+.rinjani-landscape::after {
+  content: "";
+
+  position: absolute;
+
+  left: 55%;
+  top: 8%;
+
+  width: 520px;
+  height: 320px;
+
+  transform: translate(-50%, -10%);
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(255,214,132,.22) 0%,
+      rgba(255,177,89,.10) 32%,
+      transparent 70%
+    );
+
+  filter: blur(28px);
+
+  pointer-events: none;
+
+  z-index: 3;
+}
+
+
+/* ============================================================
+   COMMAND CENTER — GLASS
+   ============================================================ */
+
+.command-monitor {
+  z-index: 100 !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20,64,43,.72),
+      rgba(8,43,29,.62)
+    ) !important;
+
+  border:
+    1px solid rgba(225,243,228,.30) !important;
+
+  box-shadow:
+    0 35px 80px rgba(0,35,22,.28),
+    0 0 60px rgba(255,203,116,.10),
+    inset 0 1px 0 rgba(255,255,255,.25) !important;
+
+  backdrop-filter:
+    blur(9px)
+    saturate(125%) !important;
+
+  -webkit-backdrop-filter:
+    blur(9px)
+    saturate(125%) !important;
+
+  color: white !important;
+}
+
+
+/* ============================================================
+   COMMAND CENTER TEXT
+   ============================================================ */
+
+.monitor-brand,
+.monitor-content,
+.monitor-welcome,
+.monitor-welcome strong {
+  color: #ffffff !important;
+}
+
+.monitor-welcome small {
+  color: rgba(255,255,255,.70) !important;
+}
+
+
+/* ============================================================
+   CHART
+   ============================================================ */
+
+.chart-bars span {
+  background:
+    linear-gradient(
+      180deg,
+      #fff1b4,
+      #d4a84e
+    ) !important;
+
+  box-shadow:
+    0 0 16px rgba(255,207,116,.18) !important;
+}
+
+
+/* ============================================================
+   FLOATING CARDS
+   ============================================================ */
+
+.floating-card,
+.floating-task,
+.floating-calendar {
+  z-index: 120 !important;
+
+  background:
+    rgba(16,67,45,.76) !important;
+
+  border:
+    1px solid rgba(229,245,232,.28) !important;
+
+  color:
+    #ffffff !important;
+
+  box-shadow:
+    0 18px 45px rgba(0,38,24,.25),
+    inset 0 1px 0 rgba(255,255,255,.18) !important;
+
+  backdrop-filter:
+    blur(12px) !important;
+
+  -webkit-backdrop-filter:
+    blur(12px) !important;
+}
+
+.floating-card strong,
+.floating-task strong,
+.floating-calendar strong {
+  color: #ffffff !important;
+}
+
+.floating-card small,
+.floating-task small,
+.floating-calendar small {
+  color: rgba(255,255,255,.68) !important;
+}
+
+
+/* ============================================================
+   ENTER WORKSPACE
+   ============================================================ */
+
+.enter-command {
+  z-index: 300 !important;
+
+  background:
+    rgba(255,255,255,.93) !important;
+
+  color:
+    #17472f !important;
+
+  border:
+    1px solid rgba(255,255,255,.85) !important;
+
+  box-shadow:
+    0 20px 50px rgba(0,40,25,.28),
+    0 0 35px rgba(255,206,120,.16) !important;
+
+  backdrop-filter:
+    blur(12px) !important;
+}
+
+.enter-command-icon {
+  background:
+    linear-gradient(
+      145deg,
+      #ffe3a0,
+      #d7a94d
+    ) !important;
+
+  color:
+    #24472f !important;
+}
+
+
+/* ============================================================
+   LOGIN PANEL
+   ============================================================ */
+
+.rinjani-login-card {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.94),
+      rgba(245,249,242,.90)
+    ) !important;
+
+  border:
+    1px solid rgba(255,255,255,.88) !important;
+
+  color:
+    #173d2b !important;
+
+  box-shadow:
+    0 40px 100px rgba(0,39,25,.28),
+    0 0 45px rgba(255,199,108,.12),
+    inset 0 1px 0 rgba(255,255,255,.95) !important;
+
+  backdrop-filter:
+    blur(18px)
+    saturate(125%) !important;
+
+  -webkit-backdrop-filter:
+    blur(18px)
+    saturate(125%) !important;
+}
+
+
+/* ============================================================
+   LOGIN HEADING
+   ============================================================ */
+
+.rinjani-login-heading h1 {
+  color:
+    #123d29 !important;
+}
+
+.rinjani-login-heading p {
+  color:
+    #64776b !important;
+}
+
+.rinjani-login-heading span {
+  color:
+    #b18432 !important;
+}
+
+
+/* ============================================================
+   LOGIN INPUT
+   ============================================================ */
+
+.rinjani-login-input {
+  background:
+    rgba(250,252,248,.92) !important;
+
+  border:
+    1px solid #cbd9ce !important;
+
+  color:
+    #173d2b !important;
+}
+
+.rinjani-login-input:focus-within {
+  border-color:
+    #c99b42 !important;
+
+  box-shadow:
+    0 0 0 3px rgba(201,155,66,.13) !important;
+}
+
+.rinjani-login-input input {
+  color:
+    #183d2b !important;
+}
+
+.rinjani-login-input input::placeholder {
+  color:
+    #91a097 !important;
+}
+
+
+/* ============================================================
+   LOGIN BUTTON
+   ============================================================ */
+
+.rinjani-login-submit {
+  background:
+    linear-gradient(
+      135deg,
+      #397f4d,
+      #164e31
+    ) !important;
+
+  color:
+    #ffffff !important;
+
+  border:
+    1px solid rgba(255,255,255,.25) !important;
+
+  box-shadow:
+    0 15px 30px rgba(20,81,49,.25) !important;
+}
+
+.rinjani-login-submit:hover {
+  background:
+    linear-gradient(
+      135deg,
+      #4e9962,
+      #21663f
+    ) !important;
+
+  transform:
+    translateY(-2px) !important;
+}
+
+
+/* ============================================================
+   DESKTOP — REFERENCE COMPOSITION
+   ============================================================ */
 
 @media (min-width: 901px) {
 
-  .rinjani-login-header {
-    top: 30px !important;
-    left: 38px !important;
+  .workspace-active .rinjani-landscape {
+    position: fixed !important;
+
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100dvh !important;
+
+    transform: none !important;
+
+    opacity: 1 !important;
+
+    z-index: 1 !important;
   }
 
-  .rinjani-logo {
-    gap: 18px !important;
+  /*
+   * Command center berada di tengah-kiri.
+   */
+
+  .workspace-active .command-monitor {
+    position: fixed !important;
+
+    left: 37% !important;
+    top: 53% !important;
+
+    width: min(480px, 34vw) !important;
+
+    transform:
+      translate(-50%, -50%)
+      translateZ(120px)
+      scale(.96) !important;
+
+    opacity: .92 !important;
   }
 
-  .rinjani-logo img {
-    width: 68px !important;
-    height: 68px !important;
+  /*
+   * Login card berada di kanan.
+   */
 
-    min-width: 68px !important;
-    min-height: 68px !important;
+  .workspace-active .rinjani-login-panel {
+    position: fixed !important;
 
-    max-width: 68px !important;
-    max-height: 68px !important;
+    top: 50% !important;
+    right: clamp(28px, 5vw, 80px) !important;
+    left: auto !important;
 
-    border-radius: 16px !important;
+    width: min(390px, 29vw) !important;
+
+    max-width: 390px !important;
+
+    transform:
+      translateY(-50%) !important;
+
+    z-index: 500 !important;
+
+    opacity: 1 !important;
   }
 
-  .rinjani-logo::after {
-    left: 84px !important;
-    height: 54px !important;
+  .workspace-active .rinjani-login-card {
+    width: 100% !important;
+
+    max-width: 390px !important;
+
+    padding: 30px !important;
+
+    transform: none !important;
   }
 
-  .rinjani-logo > div {
-    padding-left: 2px !important;
-  }
+  /*
+   * Floating cards mengikuti landscape.
+   */
 
-  .rinjani-logo strong {
-    font-size: 19px !important;
-    letter-spacing: .15em !important;
-  }
-
-  .rinjani-logo span {
-    font-size: 8px !important;
-    letter-spacing: .23em !important;
+  .workspace-active .floating-card,
+  .workspace-active .floating-task,
+  .workspace-active .floating-calendar {
+    opacity: 1 !important;
   }
 }
 
-/* =========================================================
+
+/* ============================================================
+   PHOTO PARALLAX
+   ============================================================ */
+
+@keyframes rinjaniPhotoFloat {
+  from {
+    background-position:
+      50% 50%;
+  }
+
+  to {
+    background-position:
+      52% 48%;
+  }
+}
+
+
+/* ============================================================
+   PHOTO CREDIT
+   ============================================================ */
+
+.rinjani-3d-login::after {
+  content:
+    "Rinjani · Segara Anak · Photo by Joshua Kettle / Unsplash";
+
+  position: fixed;
+
+  left: 24px;
+  bottom: 14px;
+
+  z-index: 999;
+
+  color:
+    rgba(255,255,255,.72);
+
+  font-family:
+    Inter,
+    system-ui,
+    sans-serif;
+
+  font-size: 9px;
+
+  letter-spacing: .08em;
+
+  pointer-events: none;
+}
+
+
+/* ============================================================
    MOBILE
-   ========================================================= */
+   ============================================================ */
 
-@media (max-width: 900px) {
+@media (max-width: 600px) {
 
-  .rinjani-login-header {
-    top: 18px !important;
-    left: 18px !important;
+  .rinjani-landscape {
+    background-position:
+      center center !important;
+
+    animation:
+      none !important;
   }
 
-  .rinjani-logo {
-    gap: 11px !important;
+  .rinjani-landscape::after {
+    left: 50%;
+    top: 10%;
+
+    width: 320px;
+    height: 220px;
   }
 
-  .rinjani-logo img {
-    width: 50px !important;
-    height: 50px !important;
+  .workspace-active .rinjani-login-panel {
+    position: fixed !important;
 
-    min-width: 50px !important;
-    min-height: 50px !important;
+    inset: 0 !important;
 
-    max-width: 50px !important;
-    max-height: 50px !important;
+    width: 100vw !important;
+    height: 100dvh !important;
 
-    border-radius: 12px !important;
+    padding: 14px !important;
+
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    transform: none !important;
+
+    z-index: 9999 !important;
+
+    overflow-y: auto !important;
   }
 
-  .rinjani-logo::after {
-    left: 61px !important;
-    top: 3px !important;
-    height: 42px !important;
+  .workspace-active .rinjani-login-card {
+    width: 100% !important;
+
+    max-width: 390px !important;
+
+    padding: 22px 18px !important;
+
+    background:
+      rgba(255,255,255,.95) !important;
   }
 
-  .rinjani-logo > div {
-    min-width: 0 !important;
-    gap: 3px !important;
+  .workspace-active .command-monitor {
+    opacity: .12 !important;
   }
 
-  .rinjani-logo strong {
-    font-size: 13px !important;
-    letter-spacing: .10em !important;
-  }
+  .rinjani-3d-login::after {
+    left: 50%;
 
-  .rinjani-logo span {
-    font-size: 6px !important;
-    letter-spacing: .14em !important;
+    bottom: 7px;
+
+    transform: translateX(-50%);
+
+    font-size: 7px;
+
+    white-space: nowrap;
+  }
+}
+
+
+/* ============================================================
+   REDUCE MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .rinjani-landscape {
+    animation: none !important;
   }
 }
 

@@ -127,62 +127,11 @@ function Login({ onLogin }: LoginProps) {
         {/* 3D ENVIRONMENT */}
         <div className="command-environment">
 
-          {/* RINJANI LANDSCAPE */}
-          <div className="rinjani-landscape" aria-hidden="true">
-
-            <div className="rinjani-sky-glow" />
-
-            <div className="rinjani-cloud rinjani-cloud--one" />
-            <div className="rinjani-cloud rinjani-cloud--two" />
-            <div className="rinjani-cloud rinjani-cloud--three" />
-
-            <div className="rinjani-mountain rinjani-mountain--back">
-              <div className="rinjani-summit rinjani-summit--back" />
-            </div>
-
-            <div className="rinjani-mountain rinjani-mountain--main">
-
-              <div className="rinjani-snow-cap">
-                <span />
-                <span />
-              </div>
-
-              <div className="rinjani-ridge rinjani-ridge--left" />
-              <div className="rinjani-ridge rinjani-ridge--right" />
-
-              <div className="rinjani-caldera">
-                <div className="rinjani-caldera-inner" />
-              </div>
-
-              <div className="rinjani-valley" />
-
-            </div>
-
-            <div className="rinjani-mountain rinjani-mountain--foreground" />
-
-            <div className="rinjani-lake">
-              <div className="lake-reflection" />
-              <div className="lake-ripple lake-ripple--one" />
-              <div className="lake-ripple lake-ripple--two" />
-              <span>SEGARA ANAK</span>
-            </div>
-
-            <div className="rinjani-mist rinjani-mist--one" />
-            <div className="rinjani-mist rinjani-mist--two" />
-
-            <div className="rinjani-trees rinjani-trees--left">
-              <i /><i /><i /><i /><i />
-            </div>
-
-            <div className="rinjani-trees rinjani-trees--right">
-              <i /><i /><i /><i /><i />
-            </div>
-
-            <div className="rinjani-landscape-label">
-              <span>LOMBOK · INDONESIA</span>
-              <strong>MOUNT RINJANI</strong>
-            </div>
-
+          {/* BACK MOUNTAIN */}
+          <div className="mountain-back">
+            <div className="mountain-peak mountain-peak--left" />
+            <div className="mountain-peak mountain-peak--center" />
+            <div className="mountain-peak mountain-peak--right" />
           </div>
 
           {/* FLOOR */}
@@ -449,4 +398,3 @@ function Login({ onLogin }: LoginProps) {
 }
 
 export default Login
-
