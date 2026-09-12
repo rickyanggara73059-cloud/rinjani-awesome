@@ -32,6 +32,7 @@ import RemainingPayments from './pages/RemainingPayments'
 import PaymentIn from './pages/PaymentIn'
 import RepeatOrders from './pages/RepeatOrders'
 import Login from './pages/Login'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import './App.css'
 
@@ -788,7 +789,7 @@ setMonthlyRemainingPayment({
 }
 function App() {
   const [active, setActive] = useState('Dashboard')
-   const [session, setSession] = useState<any>(null)
+   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [userRole, setUserRole] = useState('staff')
   const handleLogin = async (

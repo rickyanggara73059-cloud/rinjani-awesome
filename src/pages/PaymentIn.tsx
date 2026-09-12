@@ -17,6 +17,7 @@ type PaymentRow = {
   id: string
   tripId: string
   totalPrice: number
+  currency: 'IDR' | 'USD'
   amount: number
   paymentStatus: string
   paymentMethod: string
@@ -40,7 +41,16 @@ type PaymentHistory = {
   notes: string | null
 }
 
-function formatRupiah(value: number) {
+function formatPrice(
+  value: number,
+  currency: 'IDR' | 'USD',
+) {
+  if (currency === 'USD') {
+    return '$' + value.toLocaleString('en-US', {
+      maximumFractionDigits: 2,
+    })
+  }
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -137,6 +147,7 @@ export default function PaymentIn() {
             start_date,
             end_date,
             total_price,
+            currency,
             customer:customers (
               id,
               name,
@@ -217,6 +228,8 @@ export default function PaymentIn() {
               id: payment.id,
               tripId: trip.id,
               totalPrice,
+              currency:
+                trip.currency === 'USD' ? 'USD' : 'IDR',
               amount: Number(
                 payment.amount ?? 0,
               ),
@@ -362,7 +375,7 @@ export default function PaymentIn() {
 
     if (amount > selectedRemaining) {
       window.alert(
-        `Nominal pelunasan tidak boleh lebih dari sisa pembayaran ${formatRupiah(selectedRemaining)}.`,
+        `Nominal pelunasan tidak boleh lebih dari sisa pembayaran ${formatPrice(selectedRemaining, selectedPayment.currency)}.`,
       )
       return
     }
@@ -412,7 +425,7 @@ export default function PaymentIn() {
 
       if (amount > remainingFromDatabase) {
         window.alert(
-          `Nominal pelunasan tidak boleh lebih dari sisa pembayaran ${formatRupiah(remainingFromDatabase)}.`,
+          `Nominal pelunasan tidak boleh lebih dari sisa pembayaran ${formatPrice(remainingFromDatabase, selectedPayment.currency)}.`,
         )
         return
       }
@@ -428,6 +441,7 @@ export default function PaymentIn() {
           .insert({
             trip_id: selectedPayment.tripId,
             amount,
+            currency: selectedPayment.currency,
             payment_status: newStatus,
             payment_method:
               settlementForm.paymentMethod,
@@ -459,7 +473,7 @@ export default function PaymentIn() {
       await loadPayments()
 
       window.alert(
-        `Pelunasan sebesar ${formatRupiah(amount)} berhasil disimpan.`,
+        `Pelunasan sebesar ${formatPrice(amount, selectedPayment.currency)} berhasil disimpan.`,
       )
     } catch (error) {
       console.error(
@@ -497,9 +511,16 @@ export default function PaymentIn() {
   }, [payments, search])
 
   const totalIncoming = payments.reduce(
-    (sum, payment) =>
-      sum + payment.amount,
-    0,
+    (totals, payment) => {
+      if (payment.currency === 'USD') {
+        totals.USD += payment.amount
+      } else {
+        totals.IDR += payment.amount
+      }
+
+      return totals
+    },
+    { IDR: 0, USD: 0 },
   )
 
   const totalDp = payments
@@ -509,9 +530,16 @@ export default function PaymentIn() {
           .toLowerCase() === 'dp',
     )
     .reduce(
-      (sum, payment) =>
-        sum + payment.amount,
-      0,
+      (totals, payment) => {
+        if (payment.currency === 'USD') {
+          totals.USD += payment.amount
+        } else {
+          totals.IDR += payment.amount
+        }
+
+        return totals
+      },
+      { IDR: 0, USD: 0 },
     )
 
   const totalPaid = payments
@@ -521,9 +549,16 @@ export default function PaymentIn() {
         .includes('lunas'),
     )
     .reduce(
-      (sum, payment) =>
-        sum + payment.amount,
-      0,
+      (totals, payment) => {
+        if (payment.currency === 'USD') {
+          totals.USD += payment.amount
+        } else {
+          totals.IDR += payment.amount
+        }
+
+        return totals
+      },
+      { IDR: 0, USD: 0 },
     )
 
   const monthName =
@@ -565,11 +600,24 @@ export default function PaymentIn() {
             <span>Total Pembayaran</span>
 
             <strong>
-              {loading
-                ? '...'
-                : formatRupiah(
-                    totalIncoming,
-                  )}
+              {loading ? (
+                '...'
+              ) : (
+                <>
+                  <span>
+                    {formatPrice(
+                      totalIncoming.IDR,
+                      'IDR',
+                    )}
+                  </span>
+                  <span>
+                    {formatPrice(
+                      totalIncoming.USD,
+                      'USD',
+                    )}
+                  </span>
+                </>
+              )}
             </strong>
 
             <small>
@@ -607,9 +655,24 @@ export default function PaymentIn() {
             <span>Total DP</span>
 
             <strong>
-              {loading
-                ? '...'
-                : formatRupiah(totalDp)}
+              {loading ? (
+                '...'
+              ) : (
+                <>
+                  <span>
+                    {formatPrice(
+                      totalDp.IDR,
+                      'IDR',
+                    )}
+                  </span>
+                  <span>
+                    {formatPrice(
+                      totalDp.USD,
+                      'USD',
+                    )}
+                  </span>
+                </>
+              )}
             </strong>
 
             <small>
@@ -627,9 +690,24 @@ export default function PaymentIn() {
             <span>Pelunasan</span>
 
             <strong>
-              {loading
-                ? '...'
-                : formatRupiah(totalPaid)}
+              {loading ? (
+                '...'
+              ) : (
+                <>
+                  <span>
+                    {formatPrice(
+                      totalPaid.IDR,
+                      'IDR',
+                    )}
+                  </span>
+                  <span>
+                    {formatPrice(
+                      totalPaid.USD,
+                      'USD',
+                    )}
+                  </span>
+                </>
+              )}
             </strong>
 
             <small>
@@ -776,8 +854,9 @@ export default function PaymentIn() {
 
                       <td>
                         <strong className="payment-in-amount">
-                          {formatRupiah(
+                          {formatPrice(
                             payment.amount,
+                            payment.currency,
                           )}
                         </strong>
                       </td>
@@ -867,8 +946,9 @@ export default function PaymentIn() {
                     <span>Total Trip</span>
 
                     <strong>
-                      {formatRupiah(
+                      {formatPrice(
                         selectedPayment.totalPrice,
+                        selectedPayment.currency,
                       )}
                     </strong>
                   </div>
@@ -877,8 +957,9 @@ export default function PaymentIn() {
                     <span>Sudah Dibayar</span>
 
                     <strong>
-                      {formatRupiah(
+                      {formatPrice(
                         totalSelectedPaid,
+                        selectedPayment.currency,
                       )}
                     </strong>
                   </div>
@@ -889,8 +970,9 @@ export default function PaymentIn() {
                     </span>
 
                     <strong>
-                      {formatRupiah(
+                      {formatPrice(
                         selectedRemaining,
+                        selectedPayment.currency,
                       )}
                     </strong>
                   </div>
@@ -932,10 +1014,11 @@ export default function PaymentIn() {
                           </div>
 
                           <strong>
-                            {formatRupiah(
+                            {formatPrice(
                               Number(
                                 item.amount ?? 0,
                               ),
+                              selectedPayment.currency,
                             )}
                           </strong>
                         </div>
@@ -1018,8 +1101,9 @@ export default function PaymentIn() {
                       <small>
                         Sisa saat ini:{' '}
                         <strong>
-                          {formatRupiah(
+                          {formatPrice(
                             selectedRemaining,
+                            selectedPayment.currency,
                           )}
                         </strong>
                       </small>

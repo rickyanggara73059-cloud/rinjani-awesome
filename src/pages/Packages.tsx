@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Package,
   Search,
@@ -7,7 +7,6 @@ import {
   Globe2,
   MapPin,
   X,
-  Users,
   ChevronRight,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -21,14 +20,6 @@ type PackageItem = {
   created_at: string
   category: 'local' | 'international'
   currency: 'IDR' | 'USD'
-}
-
-type PricingTier = {
-  id: string
-  package_id: string
-  min_pax: number
-  max_pax: number | null
-  price_per_pax: number
 }
 
 function formatRupiah(value: number) {
@@ -52,21 +43,8 @@ function formatPrice(
   return `$${value.toLocaleString('en-US')}`
 }
 
-function formatTierRange(tier: PricingTier) {
-  if (tier.max_pax === null) {
-    return `${tier.min_pax}+ Pax`
-  }
-
-  if (tier.min_pax === tier.max_pax) {
-    return `${tier.min_pax} Pax`
-  }
-
-  return `${tier.min_pax}–${tier.max_pax} Pax`
-}
-
 function Packages() {
   const [packages, setPackages] = useState<PackageItem[]>([])
-  const [pricing, setPricing] = useState<PricingTier[]>([])
 
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -78,9 +56,6 @@ function Packages() {
 
   const [selectedPackage, setSelectedPackage] =
     useState<PackageItem | null>(null)
-
-  const [detailLoading, setDetailLoading] =
-    useState(false)
 
   const loadPackages = async () => {
     setLoading(true)
@@ -127,43 +102,10 @@ function Packages() {
     loadPackages()
   }, [])
 
-  const openPackageDetail = async (
-    item: PackageItem,
-  ) => {
+  const openPackageDetail = (item: PackageItem) => {
     setSelectedPackage(item)
-    setDetailLoading(true)
-
-    try {
-      const { data, error } = await supabase
-        .from('package_pricing')
-        .select(`
-          id,
-          package_id,
-          min_pax,
-          max_pax,
-          price_per_pax
-        `)
-        .eq('package_id', item.id)
-        .order('min_pax', {
-          ascending: true,
-        })
-
-      if (error) throw error
-
-      setPricing(
-        (data ?? []) as PricingTier[],
-      )
-    } catch (error) {
-      console.error(
-        'Gagal mengambil tier harga:',
-        error,
-      )
-
-      setPricing([])
-    } finally {
-      setDetailLoading(false)
-    }
   }
+
 
   const filteredPackages = useMemo(() => {
     const keyword =
@@ -480,7 +422,7 @@ function Packages() {
                 <tr>
                   <th>Nama Paket</th>
                   <th>Deskripsi</th>
-                  <th>Harga Mulai</th>
+                  <th>Harga Paket</th>
                   <th>Currency</th>
                   <th>Status</th>
                 </tr>
@@ -519,8 +461,7 @@ function Packages() {
                             </strong>
 
                             <small>
-                              Klik untuk melihat
-                              tier harga
+                              Klik untuk melihat detail paket
                             </small>
                           </div>
                         </div>
@@ -578,7 +519,6 @@ function Packages() {
           className="package-modal-backdrop"
           onMouseDown={() => {
             setSelectedPackage(null)
-            setPricing([])
           }}
         >
           <div
@@ -612,7 +552,6 @@ function Packages() {
                   setSelectedPackage(
                     null,
                   )
-                  setPricing([])
                 }}
               >
                 <X size={18} />
@@ -623,7 +562,7 @@ function Packages() {
               <div className="package-price-summary">
                 <div>
                   <span>
-                    Harga mulai
+                    Harga Paket
                   </span>
 
                   <strong>
@@ -656,76 +595,12 @@ function Packages() {
                 </div>
               </div>
 
-              <div className="package-tier-heading">
-                <div>
-                  <Users size={17} />
-
-                  <strong>
-                    Harga berdasarkan jumlah Pax
-                  </strong>
-                </div>
-
-                <span>
-                  {pricing.length} tier
-                </span>
-              </div>
-
-              {detailLoading ? (
-                <div className="package-detail-loading">
-                  <Package size={25} />
-
-                  <span>
-                    Memuat tier harga...
-                  </span>
-                </div>
-              ) : pricing.length === 0 ? (
-                <div className="package-detail-loading">
-                  <XCircle size={25} />
-
-                  <span>
-                    Belum ada tier harga.
-                  </span>
-                </div>
-              ) : (
-                <div className="package-tier-list">
-                  {pricing.map(
-                    (tier) => (
-                      <div
-                        className="package-tier"
-                        key={tier.id}
-                      >
-                        <div className="package-tier__pax">
-                          <Users size={15} />
-
-                          <strong>
-                            {formatTierRange(
-                              tier,
-                            )}
-                          </strong>
-                        </div>
-
-                        <strong className="package-tier__price">
-                          {formatPrice(
-                            Number(
-                              tier.price_per_pax,
-                            ),
-                            selectedPackage.currency,
-                          )}
-                          <small>
-                            / pax
-                          </small>
-                        </strong>
-                      </div>
-                    ),
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="package-modal__footer">
               <span>
-                Harga akan digunakan berdasarkan
-                jumlah Pax saat booking.
+                Harga paket ditentukan secara manual dan
+                digunakan sebagai harga per Pax saat booking.
               </span>
 
               <button
@@ -735,7 +610,6 @@ function Packages() {
                   setSelectedPackage(
                     null,
                   )
-                  setPricing([])
                 }}
               >
                 Tutup
