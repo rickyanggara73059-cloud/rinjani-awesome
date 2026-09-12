@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -102,7 +102,16 @@ function formatDashboardDate(value: string) {
   }).format(date)
 }
 
-function formatDashboardCurrency(value: number) {
+type CurrencyTotals = {
+  IDR: number
+  USD: number
+}
+
+function formatDashboardCurrency(value: number, currency: 'IDR' | 'USD') {
+  if (currency === 'USD') {
+    return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 2 })
+  }
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -114,9 +123,9 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
   const [loading, setLoading] = useState(true)
 
   const [totalCustomers, setTotalCustomers] = useState(0)
-  const [monthlyTripValue, setMonthlyTripValue] = useState(0)
-  const [monthlyPaymentIn, setMonthlyPaymentIn] = useState(0)
-  const [monthlyRemainingPayment, setMonthlyRemainingPayment] = useState(0)
+  const [monthlyTripValue, setMonthlyTripValue] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
+  const [monthlyPaymentIn, setMonthlyPaymentIn] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
+  const [monthlyRemainingPayment, setMonthlyRemainingPayment] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
   const [remainingCustomers, setRemainingCustomers] = useState<
     Array<{
       id: string
@@ -229,7 +238,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
 
         supabase
           .from('payments')
-          .select('amount')
+          .select("amount, trip:trips ( currency )")
           .gte('payment_date', monthStart)
           .lt('payment_date', nextMonth),
 
@@ -239,6 +248,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             id,
             package_name,
             total_price,
+            currency,
             booking_date,
             customer:customers (
               id,
@@ -246,7 +256,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
               country
             ),
             payments (
-              amount
+              amount,
+              currency
             )
           `)
           .gte('booking_date', monthStart)
@@ -282,15 +293,26 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
       setUpcomingTrips(upcomingData)
       setFollowUps(followUpData)
 
-      const paymentIn = (paymentsResult.data ?? []).reduce(
-        (sum, payment) => sum + Number(payment.amount ?? 0),
-        0,
-      )
+      const paymentTotals: CurrencyTotals = (paymentsResult.data ?? []).reduce(
+  (totals, payment) => {
+    const trip = Array.isArray(payment.trip)
+      ? payment.trip[0]
+      : payment.trip
+
+    const currency = trip?.currency === 'USD' ? 'USD' : 'IDR'
+
+    totals[currency] += Number(payment.amount ?? 0)
+
+    return totals
+  },
+  { IDR: 0, USD: 0 } as CurrencyTotals,
+)
 
       type MonthlyTripRow = {
         id: string
         package_name: string | null
         total_price: number | null
+        currency: 'IDR' | 'USD' | null
         booking_date: string | null
         customer:
           | {
@@ -307,6 +329,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
         payments:
           | Array<{
               amount: number | null
+              currency: 'IDR' | 'USD' | null
             }>
           | null
       }
@@ -314,21 +337,35 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
       const monthlyTripRows =
         (monthlyTripsResult.data ?? []) as unknown as MonthlyTripRow[]
 
-      const tripValue = monthlyTripRows.reduce(
-        (sum, trip) => sum + Number(trip.total_price ?? 0),
-        0,
-      )
+      const tripTotals: CurrencyTotals = monthlyTripRows.reduce(
+  (totals, trip) => {
+    const currency = trip.currency === 'USD' ? 'USD' : 'IDR'
 
-      const paidForMonthlyTrips = monthlyTripRows.reduce(
-        (sum, trip) =>
-          sum +
-          (trip.payments ?? []).reduce(
-            (paymentSum, payment) =>
-              paymentSum + Number(payment.amount ?? 0),
-            0,
-          ),
-        0,
-      )
+    totals[currency] += Number(trip.total_price ?? 0)
+
+    return totals
+  },
+  { IDR: 0, USD: 0 } as CurrencyTotals,
+)
+
+const paidTotals: CurrencyTotals = monthlyTripRows.reduce(
+  (totals, trip) => {
+    const tripCurrency =
+      trip.currency === 'USD' ? 'USD' : 'IDR'
+
+    ;(trip.payments ?? []).forEach((payment) => {
+      const currency =
+        payment.currency === 'USD'
+          ? 'USD'
+          : tripCurrency
+
+      totals[currency] += Number(payment.amount ?? 0)
+    })
+
+    return totals
+  },
+  { IDR: 0, USD: 0 } as CurrencyTotals,
+)
 
       const remainingCustomerRows = monthlyTripRows
         .map((trip) => {
@@ -356,11 +393,12 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
         })
         .filter((item) => item.remaining > 0)
 
-      setMonthlyTripValue(tripValue)
-      setMonthlyPaymentIn(paymentIn)
-      setMonthlyRemainingPayment(
-        Math.max(tripValue - paidForMonthlyTrips, 0),
-      )
+      setMonthlyTripValue(tripTotals)
+setMonthlyPaymentIn(paymentTotals)
+setMonthlyRemainingPayment({
+  IDR: Math.max(tripTotals.IDR - paidTotals.IDR, 0),
+  USD: Math.max(tripTotals.USD - paidTotals.USD, 0),
+})
       setRemainingCustomers(remainingCustomerRows)
       setLatestCustomers(
         (latestCustomersResult.data ?? []) as DashboardCustomer[],
@@ -434,9 +472,10 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             <div>
               <p>Total Nilai Trip Bulan Ini</p>
               <h2>
-                {loading
-                  ? '...'
-                  : formatDashboardCurrency(monthlyTripValue)}
+                <>
+  <span>{formatDashboardCurrency(monthlyTripValue.IDR, 'IDR')}</span>
+  <span>{formatDashboardCurrency(monthlyTripValue.USD, 'USD')}</span>
+</>
               </h2>
             </div>
 
@@ -456,9 +495,10 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             <div>
               <p>Pembayaran Masuk</p>
               <h2>
-                {loading
-                  ? '...'
-                  : formatDashboardCurrency(monthlyPaymentIn)}
+                <>
+  <span>{formatDashboardCurrency(monthlyPaymentIn.IDR, 'IDR')}</span>
+  <span>{formatDashboardCurrency(monthlyPaymentIn.USD, 'USD')}</span>
+</>
               </h2>
             </div>
 
@@ -483,9 +523,14 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             <div>
               <p>Sisa Pembayaran Bulan Ini</p>
               <h2>
-                {loading
-                  ? '...'
-                  : formatDashboardCurrency(monthlyRemainingPayment)}
+                <>
+  <span>
+    {formatDashboardCurrency(monthlyRemainingPayment.IDR, 'IDR')}
+  </span>
+  <span>
+    {formatDashboardCurrency(monthlyRemainingPayment.USD, 'USD')}
+  </span>
+</>
               </h2>
             </div>
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   Search,
@@ -1007,6 +1007,11 @@ if (paymentAmount > selectedTripPaymentRemaining) {
       (item) => item.name === packageName,
     )
 
+    const tripCurrency: 'IDR' | 'USD' =
+      selectedPackage?.currency === 'USD'
+        ? 'USD'
+        : 'IDR'
+
     if (!packageName) {
       alert('Nama paket wajib diisi.')
       return
@@ -1033,6 +1038,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
           end_date: tripForm.tripEnd,
           pax: paxNumber,
           price_per_pax: pricePerPaxNumber,
+          currency: tripCurrency,
 
           guide_name: tripForm.guide.trim() || null,
           status: tripForm.tripStatus,
@@ -1048,6 +1054,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
         .insert({
           trip_id: trip.id,
           amount: paymentAmount,
+          currency: tripCurrency,
           payment_status: tripForm.paymentStatus,
           payment_method: tripForm.paymentMethod,
           payment_date:
@@ -1121,9 +1128,13 @@ if (paymentAmount > selectedTripPaymentRemaining) {
     try {
       const { data: packageData } = await supabase
         .from('packages')
-        .select('id, name')
+        .select('id, name, currency')
         .eq('name', packageName)
         .maybeSingle()
+      const tripCurrency: 'IDR' | 'USD' =
+        packageData?.currency === 'USD'
+          ? 'USD'
+          : 'IDR'
 
       const { data: customer, error: customerError } = await supabase
         .from('customers')
@@ -1154,6 +1165,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
           end_date: form.tripEnd,
           pax: paxNumber,
           price_per_pax: pricePerPaxNumber,
+          currency: tripCurrency,
           guide_name: form.guide.trim() || null,
           status: form.tripStatus,
           notes: form.notes.trim() || null,
@@ -1178,6 +1190,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
         .insert({
           trip_id: trip.id,
           amount: paymentAmount,
+          currency: tripCurrency,
           payment_status: form.paymentStatus,
           payment_method: form.paymentMethod,
           payment_date: paymentAmount > 0 ? form.bookingDate || null : null,
@@ -2901,7 +2914,6 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 }
 
 export default Customers
-
 
 
 

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownCircle,
   Banknote,
@@ -153,6 +153,47 @@ export default function PaymentIn() {
 
       if (error) throw error
 
+      /*
+       * Status pembayaran ditentukan berdasarkan total pembayaran
+       * seluruh transaksi dalam trip, bukan hanya payment_status
+       * pada transaksi individual.
+       *
+       * Dengan cara ini:
+       * - transaksi DP lama ikut berubah menjadi Lunas
+       *   ketika total pembayaran trip sudah lunas
+       * - status di menu Pembayaran Masuk sinkron dengan Customers
+       * - histori pembayaran di database tetap aman dan tidak diubah
+       */
+      const tripIds = [
+        ...new Set(
+          (data ?? [])
+            .map((payment: any) => payment.trip?.id)
+            .filter(Boolean),
+        ),
+      ]
+
+      const paidByTrip = new Map<string, number>()
+
+      if (tripIds.length > 0) {
+        const { data: allTripPayments, error: allPaymentsError } =
+          await supabase
+            .from('payments')
+            .select('trip_id, amount')
+            .in('trip_id', tripIds)
+
+        if (allPaymentsError) throw allPaymentsError
+
+        ;(allTripPayments ?? []).forEach((payment: any) => {
+          const tripId = String(payment.trip_id)
+          const currentTotal = paidByTrip.get(tripId) ?? 0
+
+          paidByTrip.set(
+            tripId,
+            currentTotal + Number(payment.amount ?? 0),
+          )
+        })
+      }
+
       const mapped: PaymentRow[] = (data ?? []).flatMap(
         (payment: any) => {
           const trip = payment.trip
@@ -160,19 +201,27 @@ export default function PaymentIn() {
 
           if (!trip || !customer) return []
 
+          const tripId = String(trip.id)
+          const totalPrice = Number(
+            trip.total_price ?? 0,
+          )
+          const totalPaid = paidByTrip.get(tripId) ?? 0
+
+          const calculatedPaymentStatus =
+            totalPrice > 0 && totalPaid >= totalPrice
+              ? 'Lunas'
+              : 'DP'
+
           return [
             {
               id: payment.id,
               tripId: trip.id,
-              totalPrice: Number(
-                trip.total_price ?? 0,
-              ),
+              totalPrice,
               amount: Number(
                 payment.amount ?? 0,
               ),
               paymentStatus:
-                payment.payment_status ??
-                'Belum ditentukan',
+                calculatedPaymentStatus,
               paymentMethod:
                 payment.payment_method ?? '-',
               paymentDate:
