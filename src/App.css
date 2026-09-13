@@ -9447,3 +9447,334 @@ body,
 .stat-card h2 span {
   display: block;
 }
+
+ /* =========================================================
+    DASHBOARD DATE FILTER
+    ========================================================= */
+
+.dashboard-date-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 24px;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1px solid #e4eaf0;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-date-filter__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 230px;
+  color: #0f172a;
+}
+
+.dashboard-date-filter__title > svg {
+  flex: 0 0 auto;
+  color: #0a9f7a;
+}
+
+.dashboard-date-filter__title > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dashboard-date-filter__title strong {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+.dashboard-date-filter__title small {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #7b8794;
+}
+
+.dashboard-date-filter__fields {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1;
+}
+
+.dashboard-date-filter__fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 155px;
+}
+
+.dashboard-date-filter__fields label > span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #718096;
+}
+
+.dashboard-date-filter__fields input[type="date"] {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #dbe3ea;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.dashboard-date-filter__fields input[type="date"]:hover {
+  border-color: #b9c8d6;
+  background: #ffffff;
+}
+
+.dashboard-date-filter__fields input[type="date"]:focus {
+  border-color: #0a9f7a;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(10, 159, 122, 0.12);
+}
+
+.dashboard-date-filter__fields .primary-button,
+.dashboard-date-filter__fields .secondary-button {
+  height: 42px;
+  min-width: 92px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.dashboard-date-filter__fields .primary-button {
+  border: 1px solid #0a9f7a;
+  background: #0a9f7a;
+  color: #ffffff;
+  box-shadow: 0 5px 12px rgba(10, 159, 122, 0.18);
+}
+
+.dashboard-date-filter__fields .primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(10, 159, 122, 0.22);
+}
+
+.dashboard-date-filter__fields .secondary-button {
+  border: 1px solid #dbe3ea;
+  background: #ffffff;
+  color: #425466;
+}
+
+.dashboard-date-filter__fields .secondary-button:hover {
+  border-color: #b9c8d6;
+  background: #f8fafc;
+}
+
+.dashboard-date-filter__fields .primary-button:active,
+.dashboard-date-filter__fields .secondary-button:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .dashboard-date-filter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-date-filter__title {
+    width: 100%;
+  }
+
+  .dashboard-date-filter__fields {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-date-filter {
+    gap: 16px;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .dashboard-date-filter__fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+  }
+
+  .dashboard-date-filter__fields label {
+    min-width: 0;
+  }
+
+  .dashboard-date-filter__fields .primary-button,
+  .dashboard-date-filter__fields .secondary-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-date-filter__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-date-filter__fields input[type="date"],
+  .dashboard-date-filter__fields .primary-button,
+  .dashboard-date-filter__fields .secondary-button {
+    height: 44px;
+  }
+}
+
+ /* =========================================================
+    UPCOMING TRIPS - TICKET STATUS
+    ========================================================= */
+
+.ticket-status-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 150px;
+}
+
+.ticket-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ticket-badge--pending {
+  background: #fff4e8;
+  color: #b45309;
+  border: 1px solid #fed7aa;
+}
+
+.ticket-badge--done {
+  background: #e9f9f3;
+  color: #087f5b;
+  border: 1px solid #b7ead7;
+}
+
+.ticket-toggle-button {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #d8e1e8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ticket-toggle-button:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #b7c5d1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+.ticket-toggle-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ticket-toggle-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .ticket-status-cell {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .ticket-toggle-button {
+    width: fit-content;
+  }
+}
+
+@media (max-width: 600px) {
+  .ticket-status-cell {
+    min-width: 120px;
+  }
+
+  .ticket-badge {
+    font-size: 9px;
+    padding: 5px 8px;
+  }
+
+  .ticket-toggle-button {
+    height: 32px;
+    font-size: 10px;
+  }
+}
+
+/* Total Nilai Trip - multi currency */
+.stat-card__currency-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.stat-card__currency-total span {
+  display: block;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+/* Trip History - Total Nilai Trip multi currency */
+.currency-total-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+}
+
+.currency-total-stack strong {
+  display: block !important;
+  white-space: nowrap !important;
+  line-height: 1.15 !important;
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -123,6 +123,35 @@ function formatDashboardCurrency(value: number, currency: 'IDR' | 'USD') {
 function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemainingPayments: () => void; onOpenPaymentIn: () => void }) {
   const [loading, setLoading] = useState(true)
 
+
+  const filterNow = new Date()
+
+  const filterDefaultStart = new Date(
+    filterNow.getFullYear(),
+    filterNow.getMonth(),
+    1,
+  ).toISOString().slice(0, 10)
+
+  const filterDefaultEnd = new Date(
+    filterNow.getFullYear(),
+    filterNow.getMonth() + 1,
+    0,
+  ).toISOString().slice(0, 10)
+
+  const [filterStartDate, setFilterStartDate] =
+    useState(filterDefaultStart)
+
+  const [filterEndDate, setFilterEndDate] =
+    useState(filterDefaultEnd)
+  
+
+  const [appliedFilterStart, setAppliedFilterStart] =
+    useState(filterDefaultStart)
+
+  const [appliedFilterEnd, setAppliedFilterEnd] =
+    useState(filterDefaultEnd)
+
+  const [totalTrips, setTotalTrips] = useState(0)
   const [totalCustomers, setTotalCustomers] = useState(0)
   const [monthlyTripValue, setMonthlyTripValue] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
   const [monthlyPaymentIn, setMonthlyPaymentIn] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
@@ -150,7 +179,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
     const now = new Date()
 
     const today = now.toISOString().slice(0, 10)
-
+    const dashboardStartDate = appliedFilterStart
+    const dashboardEndDate = appliedFilterEnd
     const monthStart = new Date(
       now.getFullYear(),
       now.getMonth(),
@@ -197,6 +227,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             )
           `)
           .eq('status', 'Ongoing')
+          .gte('start_date', dashboardStartDate)
+          .lte('start_date', dashboardEndDate)
           .order('start_date', { ascending: true })
           .limit(5),
 
@@ -215,7 +247,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
               country
             )
           `)
-          .gte('start_date', today)
+          .gte('start_date', dashboardStartDate)
+          .lte('start_date', dashboardEndDate)
           .neq('status', 'Completed')
           .order('start_date', { ascending: true })
           .limit(5),
@@ -250,7 +283,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             package_name,
             total_price,
             currency,
-            booking_date,
+            start_date,
             customer:customers (
               id,
               name,
@@ -261,8 +294,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
               currency
             )
           `)
-          .gte('booking_date', monthStart)
-          .lt('booking_date', nextMonth),
+          .gte('start_date', dashboardStartDate)
+          .lte('start_date', dashboardEndDate),
 
         supabase
           .from('customers')
@@ -314,7 +347,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
         package_name: string | null
         total_price: number | null
         currency: 'IDR' | 'USD' | null
-        booking_date: string | null
+        start_date: string | null
         customer:
           | {
               id: string
@@ -337,6 +370,10 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
 
       const monthlyTripRows =
         (monthlyTripsResult.data ?? []) as unknown as MonthlyTripRow[]
+
+      
+
+      setTotalTrips(monthlyTripRows.length)
 
       const tripTotals: CurrencyTotals = monthlyTripRows.reduce(
   (totals, trip) => {
@@ -427,9 +464,30 @@ setMonthlyRemainingPayment({
       setLoading(false)
     }
   }
+  const handleApplyDateFilter = () => {
+    if (!filterStartDate || !filterEndDate) {
+      alert('Tanggal mulai dan tanggal akhir wajib diisi.')
+      return
+    }
+
+    if (filterStartDate > filterEndDate) {
+      alert('Tanggal mulai tidak boleh lebih besar dari tanggal akhir.')
+      return
+    }
+
+    setAppliedFilterStart(filterStartDate)
+    setAppliedFilterEnd(filterEndDate)
+  }
+
+  const handleResetDateFilter = () => {
+    setFilterStartDate(filterDefaultStart)
+    setFilterEndDate(filterDefaultEnd)
+    setAppliedFilterStart(filterDefaultStart)
+    setAppliedFilterEnd(filterDefaultEnd)
+  }
   useEffect(() => {
     loadDashboard()
-  }, [])
+  }, [appliedFilterStart, appliedFilterEnd])
 
   return (
     <>
@@ -448,6 +506,56 @@ setMonthlyRemainingPayment({
           </p>
         </div>
       </div>
+
+      <section className="dashboard-date-filter">
+        <div className="dashboard-date-filter__title">
+          <CalendarDays size={18} />
+          <div>
+            <strong>Filter Periode Trip</strong>
+            <small>Berdasarkan tanggal mulai perjalanan</small>
+          </div>
+
+          <span className="count-pill">
+            {loading ? '...' : totalTrips + ' trip'}
+          </span>
+        </div>
+
+        <div className="dashboard-date-filter__fields">
+          <label>
+            <span>Dari</span>
+            <input
+              type="date"
+              value={filterStartDate}
+              onChange={(event) => setFilterStartDate(event.target.value)}
+            />
+          </label>
+
+          <label>
+            <span>Sampai</span>
+            <input
+              type="date"
+              value={filterEndDate}
+              onChange={(event) => setFilterEndDate(event.target.value)}
+            />
+          </label>
+
+          <button
+            type="button"
+            className="primary-button"
+            onClick={handleApplyDateFilter}
+          >
+            Terapkan
+          </button>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleResetDateFilter}
+          >
+            Reset
+          </button>
+        </div>
+      </section>
 
       <section className="stats-grid">
         <article className="stat-card">
@@ -471,13 +579,15 @@ setMonthlyRemainingPayment({
         <article className="stat-card">
           <div className="stat-card__top">
             <div>
-              <p>Total Nilai Trip Bulan Ini</p>
-              <h2>
-                <>
-  <span>{formatDashboardCurrency(monthlyTripValue.IDR, 'IDR')}</span>
-  <span>{formatDashboardCurrency(monthlyTripValue.USD, 'USD')}</span>
-</>
-              </h2>
+              <p>Total Nilai Trip Periode</p>
+              <h2 className="stat-card__currency-total" style={{ margin: 0 }}>
+  <div style={{ display: 'block', whiteSpace: 'nowrap' }}>
+    {formatDashboardCurrency(monthlyTripValue.IDR, 'IDR')}
+  </div>
+  <div style={{ display: 'block', whiteSpace: 'nowrap' }}>
+    {formatDashboardCurrency(monthlyTripValue.USD, 'USD')}
+  </div>
+</h2>
             </div>
 
             <div className="stat-icon">
@@ -486,7 +596,7 @@ setMonthlyRemainingPayment({
           </div>
 
           <div className="stat-card__bottom">
-            <span>Booking bulan ini</span>
+            <span>Periode trip terpilih</span>
             <small>total nilai trip</small>
           </div>
         </article>
@@ -558,7 +668,7 @@ setMonthlyRemainingPayment({
             </div>
 
             <button className="text-button">
-              Lihat Semua →
+              Lihat Semua â†’
             </button>
           </div>
 
@@ -617,7 +727,7 @@ setMonthlyRemainingPayment({
                           {formatDashboardDate(trip.start_date)}
                         </strong>
 
-                        <span className="date-arrow"> → </span>
+                        <span className="date-arrow"> â†’ </span>
 
                         {formatDashboardDate(trip.end_date)}
                       </td>
@@ -692,7 +802,7 @@ setMonthlyRemainingPayment({
             </div>
 
             <button className="text-button">
-              Kalender →
+              Kalender â†’
             </button>
           </div>
 
@@ -719,7 +829,7 @@ setMonthlyRemainingPayment({
                     </strong>
 
                     <small>
-                      {trip.customer?.country ?? '-'} ·{' '}
+                      {trip.customer?.country ?? '-'} Â·{' '}
                       {trip.package_name}
                     </small>
                   </div>
@@ -739,7 +849,7 @@ setMonthlyRemainingPayment({
             </div>
 
             <button className="text-button">
-              Lihat Semua →
+              Lihat Semua â†’
             </button>
           </div>
 
@@ -782,7 +892,7 @@ setMonthlyRemainingPayment({
           <span>Data diperbarui langsung dari database</span>
         </div>
 
-        <span>Rinjani Awesome CRM · v1.0.0</span>
+        <span>Rinjani Awesome CRM Â· v1.0.0</span>
       </div>
     </>
   )
@@ -1138,6 +1248,27 @@ return (
 }
 
 export default App
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

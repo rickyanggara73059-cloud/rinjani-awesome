@@ -17,6 +17,9 @@ type UpcomingTrip = {
   guide_name: string | null
   status: string
   total_price: number | null
+  ticket_status: string
+  ticket_number: string | null
+  ticket_purchased_at: string | null
   customer: {
     name: string
     country: string | null
@@ -51,6 +54,46 @@ function UpcomingTrips() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
+  const [updatingTicketId, setUpdatingTicketId] = useState<string | null>(null)
+  const handleTicketStatus = async (
+    tripId: string,
+    purchased: boolean,
+  ) => {
+    setUpdatingTicketId(tripId)
+
+    const nextStatus = purchased ? 'Sudah Dibeli' : 'Belum Dibeli'
+
+    const { error } = await supabase
+      .from('trips')
+      .update({
+        ticket_status: nextStatus,
+        ticket_purchased_at: purchased
+          ? new Date().toISOString().slice(0, 10)
+          : null,
+      })
+      .eq('id', tripId)
+
+    if (error) {
+      console.error('Gagal memperbarui status tiket:', error)
+      alert(`Gagal memperbarui status tiket: ${error.message}`)
+    } else {
+      setTrips((currentTrips) =>
+        currentTrips.map((trip) =>
+          trip.id === tripId
+            ? {
+                ...trip,
+                ticket_status: nextStatus,
+                ticket_purchased_at: purchased
+                  ? new Date().toISOString().slice(0, 10)
+                  : null,
+              }
+            : trip,
+        ),
+      )
+    }
+
+    setUpdatingTicketId(null)
+  }
   const loadTrips = async () => {
     setLoading(true)
 
@@ -121,6 +164,14 @@ function UpcomingTrips() {
     0,
   )
 
+  const purchasedTicketCount = filteredTrips.filter(
+    (trip) => trip.ticket_status === 'Sudah Dibeli',
+  ).length
+
+  const pendingTicketCount = filteredTrips.filter(
+    (trip) => trip.ticket_status !== 'Sudah Dibeli',
+  ).length
+
   return (
     <div className="upcoming-page">
       <div className="page-heading">
@@ -173,7 +224,43 @@ function UpcomingTrips() {
             <span>Customer</span>
             <small>akan melakukan trip</small>
           </div>
+        </article>        <article className="stat-card">
+          <div className="stat-card__top">
+            <div>
+              <p>Tiket Sudah Dibeli</p>
+              <h2>{loading ? '...' : purchasedTicketCount}</h2>
+            </div>
+
+            <div className="stat-icon">
+              <CreditCard size={21} />
+            </div>
+          </div>
+
+          <div className="stat-card__bottom">
+            <span>Sudah</span>
+            <small>tiket pendakian dibeli</small>
+          </div>
         </article>
+
+        <article className="stat-card">
+          <div className="stat-card__top">
+            <div>
+              <p>Tiket Belum Dibeli</p>
+              <h2>{loading ? '...' : pendingTicketCount}</h2>
+            </div>
+
+            <div className="stat-icon">
+              <CalendarDays size={21} />
+            </div>
+          </div>
+
+          <div className="stat-card__bottom">
+            <span>Perlu diproses</span>
+            <small>tiket pendakian</small>
+          </div>
+        </article>
+
+
 
         <article className="stat-card">
           <div className="stat-card__top">
@@ -244,6 +331,7 @@ function UpcomingTrips() {
                   <th>Pax</th>
                   <th>Jadwal</th>
                   <th>Guide / PIC</th>
+                  <th>Tiket Pendakian</th>
                   <th>Total</th>
                   <th>Status</th>
                 </tr>
@@ -288,7 +376,42 @@ function UpcomingTrips() {
 
                     <td>{trip.guide_name || '-'}</td>
 
+                    
                     <td>
+                      <div className="ticket-status-cell">
+                        <span
+                          className={
+                            trip.ticket_status === 'Sudah Dibeli'
+                              ? 'ticket-badge ticket-badge--done'
+                              : 'ticket-badge ticket-badge--pending'
+                          }
+                        >
+                          {trip.ticket_status === 'Sudah Dibeli'
+                            ? 'Sudah Dibeli'
+                            : 'Belum Dibeli'}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="ticket-toggle-button"
+                          disabled={updatingTicketId === trip.id}
+                          onClick={() =>
+                            handleTicketStatus(
+                              trip.id,
+                              trip.ticket_status !== 'Sudah Dibeli',
+                            )
+                          }
+                        >
+                          {updatingTicketId === trip.id
+                            ? 'Menyimpan...'
+                            : trip.ticket_status === 'Sudah Dibeli'
+                              ? 'Batalkan'
+                              : 'Tandai Sudah'}
+                        </button>
+                      </div>
+                    </td>
+
+<td>
                       <strong>
                         {formatRupiah(Number(trip.total_price ?? 0))}
                       </strong>
@@ -311,4 +434,6 @@ function UpcomingTrips() {
 }
 
 export default UpcomingTrips
+
+
 

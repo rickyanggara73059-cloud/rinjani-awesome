@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   Search,
@@ -711,12 +711,14 @@ if (paymentAmount > selectedTripPaymentRemaining) {
           pax,
           price_per_pax,
           total_price,
+          currency,
           guide_name,
           status,
           notes,
           payments (
             id,
             amount,
+            currency,
             payment_status,
             payment_method,
             payment_date,
@@ -766,6 +768,27 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                 ? 'DP'
                 : 'Belum Bayar'
 
+          const paymentCurrencies = payments
+            .map((payment: any) => payment.currency)
+            .filter(
+              (currency: any): currency is 'IDR' | 'USD' =>
+                currency === 'IDR' || currency === 'USD',
+            )
+
+          const tripCurrency: 'IDR' | 'USD' =
+            paymentCurrencies.includes('USD')
+              ? 'USD'
+              : paymentCurrencies.includes('IDR')
+                ? 'IDR'
+                : trip.currency === 'USD'
+                  ? 'USD'
+                  : trip.currency === 'IDR'
+                    ? 'IDR'
+                    : /international/i.test(
+                        String(trip.package_name ?? ''),
+                      )
+                      ? 'USD'
+                      : 'IDR'
           return {
   id: customer.id,
   tripId: trip.id,
@@ -790,7 +813,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
               trip.price_per_pax ?? 0,
             ),
             totalPrice,
-            currency: trip.currency === 'USD' ? 'USD' : 'IDR',
+            currency: tripCurrency,
             dpAmount: totalPaid,
             remainingPayment,
             paymentStatus,
@@ -1370,7 +1393,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                           <span>
                             {formatDate(customer.tripStart)}
                             <small>
-                              → {formatDate(customer.tripEnd)}
+                              â†’ {formatDate(customer.tripEnd)}
                             </small>
                           </span>
                         </div>
@@ -1854,7 +1877,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                   <div className="eyebrow">CUSTOMER PROFILE</div>
                   <h2>{selectedCustomer.name}</h2>
                   <p>
-                    {selectedCustomer.country} ·{' '}
+                    {selectedCustomer.country} Â·{' '}
                     {selectedCustomer.nationality}
                   </p>
                 </div>
@@ -1930,7 +1953,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                   <CalendarDays size={14} />
                   <span>Jadwal</span>
                   <strong>
-                    {formatDate(selectedCustomer.tripStart)} →{' '}
+                    {formatDate(selectedCustomer.tripStart)} â†’{' '}
                     {formatDate(selectedCustomer.tripEnd)}
                   </strong>
                 </div>
@@ -2294,7 +2317,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 
                     return (
                       <option key={trip.id} value={trip.id}>
-                        {trip.package_name ?? 'Trip'} — Sisa {formatPrice(remaining, trip.currency === 'USD' ? 'USD' : 'IDR')}
+                        {trip.package_name ?? 'Trip'} â€” Sisa {formatPrice(remaining, trip.currency === 'USD' ? 'USD' : 'IDR')}
                       </option>
                     )
                   })}
@@ -2836,6 +2859,9 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 }
 
 export default Customers
+
+
+
 
 
 

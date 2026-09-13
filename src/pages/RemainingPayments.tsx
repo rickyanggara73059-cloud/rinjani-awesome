@@ -11,21 +11,34 @@ type RemainingPayment = {
   packageName: string
   totalPrice: number
   totalPaid: number
-  remaining: number
-}
-
-function formatRupiah(value: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value)
+  
+  currency: 'IDR' | 'USD'
+remaining: number
 }
 
 function getToday() {
   return new Date().toISOString().slice(0, 10)
 }
 
+function formatPrice(
+  value: number,
+  currency: 'IDR' | 'USD',
+): string {
+  if (currency === 'USD') {
+    return (
+      '$' +
+      Number(value ?? 0).toLocaleString('en-US', {
+        maximumFractionDigits: 0,
+      })
+    )
+  }
+
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(Number(value ?? 0))
+}
 function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: string) => void }) {
   const [items, setItems] = useState<RemainingPayment[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,6 +61,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
           id,
           package_name,
           total_price,
+          currency,
           customer:customers (
             id,
             name,
@@ -79,6 +93,9 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
           0,
         )
 
+        const tripCurrency: 'IDR' | 'USD' =
+          trip.currency === 'USD' ? 'USD' : 'IDR'
+
         const remaining = Math.max(
           totalPrice - totalPaid,
           0,
@@ -94,6 +111,8 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
           packageName: trip.package_name ?? '-',
           totalPrice,
           totalPaid,
+          
+        currency: tripCurrency,
           remaining,
         }]
       })
@@ -128,7 +147,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
 
     if (amount > selectedItem.remaining) {
       window.alert(
-        `Nominal pembayaran tidak boleh lebih dari sisa pembayaran ${formatRupiah(selectedItem.remaining)}.`,
+        `Nominal pembayaran tidak boleh lebih dari sisa pembayaran ${formatPrice(selectedItem.remaining, selectedItem.currency)}.`,
       )
       return
     }
@@ -138,7 +157,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
     try {
       const { data: trip, error: tripError } = await supabase
         .from('trips')
-        .select('id, total_price')
+        .select('id, total_price, currency')
         .eq('id', selectedItem.id)
         .maybeSingle()
 
@@ -174,7 +193,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
 
       if (amount > remainingFromDatabase) {
         window.alert(
-          `Nominal pembayaran tidak boleh lebih dari sisa pembayaran ${formatRupiah(remainingFromDatabase)}.`,
+          `Nominal pembayaran tidak boleh lebih dari sisa pembayaran ${formatPrice(remainingFromDatabase, selectedItem.currency)}.`,
         )
         return
       }
@@ -184,6 +203,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
         .insert({
           trip_id: trip.id,
           amount,
+        currency: selectedItem.currency,
           payment_status: amount >= remainingFromDatabase ? 'Lunas' : 'DP',
           payment_method: paymentForm.paymentMethod,
           payment_date: paymentForm.paymentDate || getToday(),
@@ -194,7 +214,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
 
       setSelectedItem(null)
       await load()
-      window.alert(`Pembayaran sebesar ${formatRupiah(amount)} berhasil disimpan.`)
+      window.alert(`Pembayaran sebesar ${formatPrice(amount, selectedItem.currency)} berhasil disimpan.`)
     } catch (error) {
       console.error('Gagal menyimpan pembayaran:', error)
       window.alert('Pembayaran gagal disimpan. Silakan coba lagi.')
@@ -220,10 +240,6 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
     )
   }, [items, search])
 
-  const totalRemaining = filteredItems.reduce(
-    (sum, item) => sum + item.remaining,
-    0,
-  )
 
   return (
     <div>
@@ -265,7 +281,38 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
               <h2>
                 {loading
                   ? '...'
-                  : formatRupiah(totalRemaining)}
+                  : (() => {
+                      const totals = items.reduce(
+                        (result, item) => {
+                          if (item.currency === 'USD') {
+                            result.USD += item.remaining
+                          } else {
+                            result.IDR += item.remaining
+                          }
+
+                          return result
+                        },
+                        { IDR: 0, USD: 0 },
+                      )
+
+                      if (totals.IDR > 0 && totals.USD > 0) {
+                        return (
+                          <>
+                            <span>
+                              {formatPrice(totals.IDR, 'IDR')}
+                            </span>
+                            <span>{' + '}</span>
+                            <span>
+                              {formatPrice(totals.USD, 'USD')}
+                            </span>
+                          </>
+                        )
+                      }
+
+                      return totals.USD > 0
+                        ? formatPrice(totals.USD, 'USD')
+                        : formatPrice(totals.IDR, 'IDR')
+                    })()}
               </h2>
             </div>
 
@@ -353,9 +400,9 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
 
                     <td>{item.packageName}</td>
 
-                    <td>{formatRupiah(item.totalPrice)}</td>
+                    <td>{formatPrice(item.totalPrice, item.currency)}</td>
 
-                    <td>{formatRupiah(item.totalPaid)}</td>
+                    <td>{formatPrice(item.totalPaid, item.currency)}</td>
 
                     <td>
                       <button
@@ -364,7 +411,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
                         onClick={() => onOpenCustomer(item.customerId)}
                       >
                         <strong className="spending-value">
-                          {formatRupiah(item.remaining)}
+                          {formatPrice(item.remaining, item.currency)}
                         </strong>
                       </button>
                     </td>
@@ -419,15 +466,15 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
             <div className="payment-in-summary">
               <div>
                 <span>Total Trip</span>
-                <strong>{formatRupiah(selectedItem.totalPrice)}</strong>
+                <strong>{formatPrice(selectedItem.totalPrice, selectedItem.currency)}</strong>
               </div>
               <div>
                 <span>Sudah Dibayar</span>
-                <strong>{formatRupiah(selectedItem.totalPaid)}</strong>
+                <strong>{formatPrice(selectedItem.totalPaid, selectedItem.currency)}</strong>
               </div>
               <div className="payment-in-summary__remaining">
                 <span>Sisa Pembayaran</span>
-                <strong>{formatRupiah(selectedItem.remaining)}</strong>
+                <strong>{formatPrice(selectedItem.remaining, selectedItem.currency)}</strong>
               </div>
             </div>
 
@@ -450,7 +497,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
                   disabled={savingPayment}
                   required
                 />
-                <small>Sisa saat ini: <strong>{formatRupiah(selectedItem.remaining)}</strong></small>
+                <small>Sisa saat ini: <strong>{formatPrice(selectedItem.remaining, selectedItem.currency)}</strong></small>
               </label>
 
               <div className="payment-in-form-grid">
@@ -531,6 +578,7 @@ function RemainingPayments({ onOpenCustomer }: { onOpenCustomer: (customerId: st
 }
 
 export default RemainingPayments
+
 
 
 
