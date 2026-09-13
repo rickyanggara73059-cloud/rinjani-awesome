@@ -16,6 +16,7 @@ type TripHistoryItem = {
   guide_name: string | null
   status: string
   total_price: number | null
+  currency?: 'IDR' | 'USD'
   customer: {
     name: string
     country: string | null
@@ -36,7 +37,16 @@ function formatDate(value: string) {
   }).format(date)
 }
 
-function formatRupiah(value: number) {
+function formatPrice(
+  value: number,
+  currency: 'IDR' | 'USD' = 'IDR',
+) {
+  if (currency === 'USD') {
+    return '$' + value.toLocaleString('en-US', {
+      maximumFractionDigits: 0,
+    })
+  }
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -63,6 +73,7 @@ function TripHistory() {
         guide_name,
         status,
         total_price,
+        currency,
         customer:customers (
           name,
           country
@@ -111,10 +122,19 @@ function TripHistory() {
     0,
   )
 
-  const totalValue = filteredTrips.reduce(
-    (sum, trip) => sum + Number(trip.total_price ?? 0),
-    0,
-  )
+  const totalIDR = filteredTrips
+    .filter((trip) => (trip.currency ?? 'IDR') === 'IDR')
+    .reduce(
+      (sum, trip) => sum + Number(trip.total_price ?? 0),
+      0,
+    )
+
+  const totalUSD = filteredTrips
+    .filter((trip) => trip.currency === 'USD')
+    .reduce(
+      (sum, trip) => sum + Number(trip.total_price ?? 0),
+      0,
+    )
 
   return (
     <div className="history-page">
@@ -174,9 +194,23 @@ function TripHistory() {
           <div className="stat-card__top">
             <div>
               <p>Total Nilai Trip</p>
-              <h2>
-                {loading ? '...' : formatRupiah(totalValue)}
-              </h2>
+              {loading ? (
+                <h2>...</h2>
+              ) : (
+                <div className="currency-total-stack">
+                  {totalIDR > 0 && (
+                    <strong>{formatPrice(totalIDR, 'IDR')}</strong>
+                  )}
+
+                  {totalUSD > 0 && (
+                    <strong>{formatPrice(totalUSD, 'USD')}</strong>
+                  )}
+
+                  {totalIDR === 0 && totalUSD === 0 && (
+                    <strong>Rp 0</strong>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="stat-icon">
@@ -283,7 +317,7 @@ function TripHistory() {
 
                     <td>
                       <strong>
-                        {formatRupiah(Number(trip.total_price ?? 0))}
+                        {formatPrice(Number(trip.total_price ?? 0), trip.currency ?? 'IDR')}
                       </strong>
                     </td>
 
@@ -304,3 +338,11 @@ function TripHistory() {
 }
 
 export default TripHistory
+
+
+
+
+
+
+
+
