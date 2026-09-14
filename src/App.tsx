@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -34,6 +34,7 @@ import RepeatOrders from './pages/RepeatOrders'
 import Login from './pages/Login'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
+import { getTodayDateString, isTripOngoing, isTripUpcoming } from './lib/tripLifecycle'
 import './App.css'
 
 type NavItem = {
@@ -120,7 +121,7 @@ function formatDashboardCurrency(value: number, currency: 'IDR' | 'USD') {
   }).format(value)
 }
 
-function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemainingPayments: () => void; onOpenPaymentIn: () => void }) {
+function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrips, onOpenCustomers }: { onOpenRemainingPayments: () => void; onOpenPaymentIn: () => void; onOpenOngoingTrips: () => void; onOpenCustomers: () => void }) {
   const [loading, setLoading] = useState(true)
 
 
@@ -226,9 +227,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
               country
             )
           `)
-          .eq('status', 'Ongoing')
-          .gte('start_date', dashboardStartDate)
           .lte('start_date', dashboardEndDate)
+          .gte('end_date', dashboardStartDate)
           .order('start_date', { ascending: true })
           .limit(5),
 
@@ -248,8 +248,6 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
             )
           `)
           .gte('start_date', dashboardStartDate)
-          .lte('start_date', dashboardEndDate)
-          .neq('status', 'Completed')
           .order('start_date', { ascending: true })
           .limit(5),
 
@@ -314,11 +312,30 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn }: { onOpenRemaini
 
       setTotalCustomers(customersResult.count ?? 0)
 
-      const ongoingData =
-        (ongoingResult.data ?? []) as unknown as DashboardTrip[]
+      const lifecycleToday = getTodayDateString()
 
-      const upcomingData =
-        (upcomingResult.data ?? []) as unknown as DashboardTrip[]
+      const ongoingData = ((ongoingResult.data ?? []) as unknown as DashboardTrip[])
+        .filter((trip) =>
+          isTripOngoing({
+            startDate: trip.start_date,
+            endDate: trip.end_date,
+            storedStatus: trip.status,
+            today: lifecycleToday,
+          }),
+        )
+        .slice(0, 5)
+
+      const upcomingData = ((upcomingResult.data ?? []) as unknown as DashboardTrip[])
+        .filter((trip) =>
+          isTripUpcoming({
+            startDate: trip.start_date,
+            endDate: trip.end_date,
+            storedStatus: trip.status,
+            today: lifecycleToday,
+          }),
+        )
+        .filter((trip) => trip.start_date >= dashboardStartDate)
+        .slice(0, 5)
 
       const followUpData =
         (followUpResult.data ?? []) as unknown as DashboardFollowUp[]
@@ -667,8 +684,8 @@ setMonthlyRemainingPayment({
               <p>Customer yang sedang menggunakan jasa Rinjani Awesome.</p>
             </div>
 
-            <button className="text-button">
-              Lihat Semua â†’
+            <button className="text-button" onClick={onOpenOngoingTrips}>
+              Lihat Semua
             </button>
           </div>
 
@@ -693,7 +710,7 @@ setMonthlyRemainingPayment({
                         <Mountain size={22} />
                         <strong>Tidak ada ongoing trip</strong>
                         <span>
-                          Belum ada trip dengan status Ongoing.
+                          Belum ada trip yang sedang berjalan berdasarkan tanggal perjalanan.
                         </span>
                       </div>
                     </td>
@@ -727,7 +744,7 @@ setMonthlyRemainingPayment({
                           {formatDashboardDate(trip.start_date)}
                         </strong>
 
-                        <span className="date-arrow"> â†’ </span>
+                        <span className="date-arrow"> → </span>
 
                         {formatDashboardDate(trip.end_date)}
                       </td>
@@ -736,7 +753,7 @@ setMonthlyRemainingPayment({
 
                       <td>
                         <span className="status status--ongoing">
-                          {trip.status}
+                          Ongoing
                         </span>
                       </td>
                     </tr>
@@ -802,7 +819,7 @@ setMonthlyRemainingPayment({
             </div>
 
             <button className="text-button">
-              Kalender â†’
+              Kalender 
             </button>
           </div>
 
@@ -811,7 +828,7 @@ setMonthlyRemainingPayment({
               <div className="empty-customers">
                 <CalendarDays size={22} />
                 <strong>Tidak ada upcoming trip</strong>
-                <span>Belum ada perjalanan yang dijadwalkan.</span>
+                <span>Belum ada perjalanan yang akan datang berdasarkan tanggal perjalanan.</span>
               </div>
             ) : (
               upcomingTrips.map((trip) => (
@@ -829,7 +846,7 @@ setMonthlyRemainingPayment({
                     </strong>
 
                     <small>
-                      {trip.customer?.country ?? '-'} Â·{' '}
+                      {trip.customer?.country ?? '-'} · {' '}
                       {trip.package_name}
                     </small>
                   </div>
@@ -848,8 +865,8 @@ setMonthlyRemainingPayment({
               <p>Customer yang baru ditambahkan.</p>
             </div>
 
-            <button className="text-button">
-              Lihat Semua â†’
+            <button className="text-button" onClick={onOpenCustomers}>
+              Lihat Semua 
             </button>
           </div>
 
@@ -892,7 +909,7 @@ setMonthlyRemainingPayment({
           <span>Data diperbarui langsung dari database</span>
         </div>
 
-        <span>Rinjani Awesome CRM Â· v1.0.0</span>
+        <span>Rinjani Awesome CRM · v1.0.0</span>
       </div>
     </>
   )
@@ -961,8 +978,7 @@ function App() {
         const [ongoingResult, followUpResult] = await Promise.all([
           supabase
             .from('trips')
-            .select('id', { count: 'exact', head: true })
-            .eq('status', 'Ongoing'),
+            .select('id, start_date, end_date, status'),
 
           supabase
             .from('follow_ups')
@@ -973,7 +989,22 @@ function App() {
         if (ongoingResult.error) {
           console.error('Gagal memuat jumlah Ongoing Trips:', ongoingResult.error)
         } else {
-          setOngoingCount(ongoingResult.count ?? 0)
+          const lifecycleToday = getTodayDateString()
+
+          const ongoingCount = ((ongoingResult.data ?? []) as Array<{
+            start_date: string | null
+            end_date: string | null
+            status: string | null
+          }>).filter((trip) =>
+            isTripOngoing({
+              startDate: trip.start_date,
+              endDate: trip.end_date,
+              storedStatus: trip.status,
+              today: lifecycleToday,
+            }),
+          ).length
+
+          setOngoingCount(ongoingCount)
         }
 
         if (followUpResult.error) {
@@ -1239,6 +1270,12 @@ return (
               onOpenPaymentIn={() =>
                 setActive('Pembayaran Masuk')
               }
+              onOpenOngoingTrips={() =>
+                setActive('Ongoing Trips')
+              }
+              onOpenCustomers={() =>
+                setActive('Customers')
+              }
             />
           )}
         </div>
@@ -1248,6 +1285,8 @@ return (
 }
 
 export default App
+
+
 
 
 

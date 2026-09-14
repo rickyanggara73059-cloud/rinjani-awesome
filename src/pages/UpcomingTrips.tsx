@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CalendarDays,
   Users,
@@ -6,6 +6,7 @@ import {
   Search,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { getTodayDateString, isTripUpcoming } from '../lib/tripLifecycle'
 
 type UpcomingTrip = {
   id: string
@@ -97,7 +98,7 @@ function UpcomingTrips() {
   const loadTrips = async () => {
     setLoading(true)
 
-    const today = new Date().toISOString().slice(0, 10)
+    const today = getTodayDateString()
 
     const { data, error } = await supabase
       .from('trips')
@@ -111,13 +112,16 @@ function UpcomingTrips() {
         guide_name,
         status,
         total_price,
+        currency,
+        ticket_status,
+        ticket_number,
+        ticket_purchased_at,
         customer:customers (
           name,
           country,
           whatsapp
         )
-      `)
-      .eq('status', 'Booked')
+      )`)
       .gte('start_date', today)
       .order('start_date', { ascending: true })
 
@@ -126,12 +130,21 @@ function UpcomingTrips() {
       alert(`Gagal memuat Upcoming Trips: ${error.message}`)
       setTrips([])
     } else {
-      setTrips((data ?? []) as unknown as UpcomingTrip[])
+      const upcomingTrips = ((data ?? []) as unknown as UpcomingTrip[])
+        .filter((trip) =>
+          isTripUpcoming({
+            startDate: trip.start_date,
+            endDate: trip.end_date,
+            storedStatus: trip.status,
+            today,
+          }),
+        )
+
+      setTrips(upcomingTrips)
     }
 
     setLoading(false)
   }
-
   useEffect(() => {
     loadTrips()
   }, [])

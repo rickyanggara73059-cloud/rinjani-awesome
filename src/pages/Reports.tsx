@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   BarChart3,
   CreditCard,
@@ -8,6 +8,7 @@ import {
   Clock3,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { getTodayDateString, isTripCompleted, isTripOngoing, isTripUpcoming } from '../lib/tripLifecycle'
 
 type ReportTrip = {
   id: string
@@ -15,6 +16,8 @@ type ReportTrip = {
   total_price: number | null
   status: string | null
   booking_date: string | null
+  start_date: string | null
+  end_date: string | null
   customer: {
     name: string
     country: string | null
@@ -51,6 +54,8 @@ function Reports() {
           total_price,
           status,
           booking_date,
+          start_date,
+          end_date,
           customer:customers (
             name,
             country
@@ -98,17 +103,33 @@ function Reports() {
     )
 
     const totalTrips = trips.length
+    const today = getTodayDateString()
 
-    const ongoingTrips = trips.filter(
-      (trip) => trip.status === 'Ongoing',
+    const ongoingTrips = trips.filter((trip) =>
+      isTripOngoing({
+        startDate: trip.start_date,
+        endDate: trip.end_date,
+        storedStatus: trip.status,
+        today,
+      }),
     ).length
 
-    const completedTrips = trips.filter(
-      (trip) => trip.status === 'Completed',
+    const completedTrips = trips.filter((trip) =>
+      isTripCompleted({
+        startDate: trip.start_date,
+        endDate: trip.end_date,
+        storedStatus: trip.status,
+        today,
+      }),
     ).length
 
-    const bookedTrips = trips.filter(
-      (trip) => trip.status === 'Booked',
+    const bookedTrips = trips.filter((trip) =>
+      isTripUpcoming({
+        startDate: trip.start_date,
+        endDate: trip.end_date,
+        storedStatus: trip.status,
+        today,
+      }),
     ).length
 
     const customerIds = new Set<string>()
@@ -247,7 +268,7 @@ function Reports() {
           <div className="panel__header">
             <div>
               <h3>Status Trip</h3>
-              <p>Distribusi status seluruh trip.</p>
+              <p>Distribusi lifecycle seluruh trip berdasarkan tanggal perjalanan.</p>
             </div>
           </div>
 
@@ -259,7 +280,7 @@ function Reports() {
 
               <div>
                 <strong>Booked</strong>
-                <small>Trip yang belum berjalan</small>
+                <small>Trip yang belum mulai</small>
               </div>
 
               <strong>{report.bookedTrips}</strong>
@@ -272,7 +293,7 @@ function Reports() {
 
               <div>
                 <strong>Ongoing</strong>
-                <small>Trip sedang berjalan</small>
+                <small>Trip yang sedang berjalan</small>
               </div>
 
               <strong>{report.ongoingTrips}</strong>
@@ -285,7 +306,7 @@ function Reports() {
 
               <div>
                 <strong>Completed</strong>
-                <small>Trip sudah selesai</small>
+                <small>Trip yang sudah selesai</small>
               </div>
 
               <strong>{report.completedTrips}</strong>

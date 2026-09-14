@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   History,
   Users,
@@ -6,6 +6,7 @@ import {
   Search,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { getTodayDateString, isTripCompleted } from '../lib/tripLifecycle'
 
 type TripHistoryItem = {
   id: string
@@ -62,6 +63,8 @@ function TripHistory() {
   const loadHistory = async () => {
     setLoading(true)
 
+    const today = getTodayDateString()
+
     const { data, error } = await supabase
       .from('trips')
       .select(`
@@ -78,8 +81,8 @@ function TripHistory() {
           name,
           country
         )
-      `)
-      .eq('status', 'Completed')
+      )`)
+      .lt('end_date', today)
       .order('end_date', { ascending: false })
 
     if (error) {
@@ -87,12 +90,21 @@ function TripHistory() {
       alert(`Gagal memuat Trip History: ${error.message}`)
       setTrips([])
     } else {
-      setTrips((data ?? []) as unknown as TripHistoryItem[])
+      const completedTrips = ((data ?? []) as unknown as TripHistoryItem[])
+        .filter((trip) =>
+          isTripCompleted({
+            startDate: trip.start_date,
+            endDate: trip.end_date,
+            storedStatus: trip.status,
+            today,
+          }),
+        )
+
+      setTrips(completedTrips)
     }
 
     setLoading(false)
   }
-
   useEffect(() => {
     loadHistory()
   }, [])

@@ -2359,7 +2359,7 @@ tbody tr:last-child td {
 }
 
 /* =========================================================
-   RINJANI AWESOME — FULL SCREEN LOGIN
+   RINJANI AWESOME â€” FULL SCREEN LOGIN
    ========================================================= */
 
 .login-shell {
@@ -3178,7 +3178,7 @@ tbody tr:last-child td {
 }
 
 /* =========================================================
-   DASHBOARD — PAYMENT IN CLICKABLE CARD
+   DASHBOARD â€” PAYMENT IN CLICKABLE CARD
    ========================================================= */
 
 .stat-card--clickable {
@@ -3489,7 +3489,7 @@ tbody tr:last-child td {
 
 
 /* =========================================================
-   RINJANI AWESOME — 3D COMMAND CENTER LOGIN
+   RINJANI AWESOME â€” 3D COMMAND CENTER LOGIN
    ========================================================= */
 
 .rinjani-3d-login {
@@ -5311,7 +5311,7 @@ tbody tr:last-child td {
 
 
 /* =========================================================
-   RINJANI AWESOME — MOUNT RINJANI LANDSCAPE
+   RINJANI AWESOME â€” MOUNT RINJANI LANDSCAPE
    ========================================================= */
 
 .rinjani-landscape {
@@ -6063,7 +6063,7 @@ tbody tr:last-child td {
 
 
 /* =========================================================
-   RINJANI HERO LANDSCAPE — FINAL VISUAL OVERRIDE
+   RINJANI HERO LANDSCAPE â€” FINAL VISUAL OVERRIDE
    Gunung Rinjani harus terlihat jelas sebagai identitas utama
    ========================================================= */
 
@@ -6285,7 +6285,7 @@ tbody tr:last-child td {
 }
 
 /* =========================================================
-   SEGARA ANAK — MAKE IT OBVIOUS
+   SEGARA ANAK â€” MAKE IT OBVIOUS
    ========================================================= */
 
 .rinjani-lake {
@@ -6482,7 +6482,7 @@ tbody tr:last-child td {
 }
 
 /* =========================================================
-   DESKTOP — MAKE RINJANI BIG
+   DESKTOP â€” MAKE RINJANI BIG
    ========================================================= */
 
 @media (min-width: 1000px) {
@@ -6533,7 +6533,7 @@ tbody tr:last-child td {
 
 
 /* =========================================================
-   RINJANI AWESOME — MOUNT RINJANI HERO
+   RINJANI AWESOME â€” MOUNT RINJANI HERO
    FINAL LANDSCAPE REFINEMENT
    ========================================================= */
 
@@ -6746,7 +6746,7 @@ tbody tr:last-child td {
 }
 
 /* =========================================================
-   CALDERA — LARGE BUT SUBTLE
+   CALDERA â€” LARGE BUT SUBTLE
    ========================================================= */
 
 .rinjani-caldera {
@@ -6942,7 +6942,7 @@ tbody tr:last-child td {
 }
 
 /* =========================================================
-   COMMAND MONITOR — MORE TRANSPARENT
+   COMMAND MONITOR â€” MORE TRANSPARENT
    BIAR RINJANI TETAP TERLIHAT
    ========================================================= */
 
@@ -7043,7 +7043,7 @@ tbody tr:last-child td {
 
 
 /* =========================================================
-   RINJANI AWESOME — MOBILE LOGIN FIX
+   RINJANI AWESOME â€” MOBILE LOGIN FIX
    Dedicated mobile composition
    ========================================================= */
 
@@ -7510,7 +7510,7 @@ body {
 
 
 /* =========================================================
-   MOBILE LOGIN — FINAL OVERFLOW FIX
+   MOBILE LOGIN â€” FINAL OVERFLOW FIX
    Login card must always fit the phone viewport
    ========================================================= */
 
@@ -7758,7 +7758,7 @@ body {
 
 
 /* =========================================================
-   RINJANI AWESOME — DESKTOP LOGIN POSITION FIX
+   RINJANI AWESOME â€” DESKTOP LOGIN POSITION FIX
    Mobile layout tetap menggunakan patch sebelumnya.
    ========================================================= */
 
@@ -7898,7 +7898,7 @@ body {
 
 
 /* =========================================================
-   RINJANI AWESOME — BRIGHT SUNSET EDITION
+   RINJANI AWESOME â€” BRIGHT SUNSET EDITION
    Green + White + Sunset
    ========================================================= */
 
@@ -9189,7 +9189,7 @@ body,
 
 
 /* =========================================================
-   RINJANI AWESOME — BRANDING REFINEMENT
+   RINJANI AWESOME â€” BRANDING REFINEMENT
    ========================================================= */
 
 /* Header */
@@ -9777,4 +9777,149 @@ body,
   display: block !important;
   white-space: nowrap !important;
   line-height: 1.15 !important;
+}
+
+/* =========================================================
+   Dashboard - Country Visit Insights
+   ========================================================= */
+
+.country-insights-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.country-insights-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.country-insights-summary > div {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.country-insights-summary strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.country-insights-summary span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.68;
+}
+
+.country-ranking-list,
+.country-trend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.country-ranking-item__top,
+.country-trend-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.country-ranking-item__top > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.country-ranking-item__top strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.country-ranking-rank {
+  width: 28px;
+  flex: 0 0 28px;
+  text-align: center;
+}
+
+.country-ranking-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.country-ranking-meta strong {
+  font-size: 15px;
+}
+
+.country-ranking-meta span {
+  font-size: 11px;
+  opacity: 0.62;
+}
+
+.country-ranking-bar {
+  width: 100%;
+  height: 8px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.country-ranking-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0.78;
+  transition: width 0.35s ease;
+}
+
+.country-trend-item small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  opacity: 0.62;
+}
+
+.country-trend-item__top strong {
+  font-size: 13px;
+}
+
+.country-trend-item__top span {
+  font-size: 11px;
+  opacity: 0.68;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .country-insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .country-insights-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .country-ranking-item__top,
+  .country-trend-item__top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .country-ranking-meta,
+  .country-trend-item__top span {
+    text-align: left;
+  }
 }

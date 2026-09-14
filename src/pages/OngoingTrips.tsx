@@ -1,11 +1,11 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Mountain,
   Users,
   UserRound,
-  CreditCard,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { getTodayDateString, isTripOngoing } from '../lib/tripLifecycle'
 
 type OngoingTrip = {
   id: string
@@ -16,6 +16,7 @@ type OngoingTrip = {
   guide_name: string | null
   status: string
   total_price: number | null
+  currency: 'IDR' | 'USD' | string | null
   customer: {
     name: string
     country: string | null
@@ -37,7 +38,19 @@ function formatDate(value: string) {
   }).format(date)
 }
 
-function formatRupiah(value: number) {
+function formatCurrency(
+  value: number,
+  currency: 'IDR' | 'USD' | string | null,
+) {
+  if ((currency ?? 'IDR').toUpperCase() === 'USD') {
+    return (
+      '$' +
+      value.toLocaleString('en-US', {
+        maximumFractionDigits: 2,
+      })
+    )
+  }
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -52,24 +65,32 @@ function OngoingTrips() {
   const loadTrips = async () => {
     setLoading(true)
 
+    const today = getTodayDateString()
+
     const { data, error } = await supabase
       .from('trips')
       .select(`
         id,
         package_name,
         pax,
+        booking_date,
         start_date,
         end_date,
         guide_name,
         status,
         total_price,
+        currency,
+        ticket_status,
+        ticket_number,
+        ticket_purchased_at,
         customer:customers (
           name,
           country,
           whatsapp
         )
-      `)
-      .eq('status', 'Ongoing')
+      )`)
+      .lte('start_date', today)
+      .gte('end_date', today)
       .order('start_date', { ascending: true })
 
     if (error) {
@@ -77,12 +98,21 @@ function OngoingTrips() {
       alert(`Gagal memuat Ongoing Trips: ${error.message}`)
       setTrips([])
     } else {
-      setTrips((data ?? []) as unknown as OngoingTrip[])
+      const ongoingTrips = ((data ?? []) as unknown as OngoingTrip[])
+        .filter((trip) =>
+          isTripOngoing({
+            startDate: trip.start_date,
+            endDate: trip.end_date,
+            storedStatus: trip.status,
+            today,
+          }),
+        )
+
+      setTrips(ongoingTrips)
     }
 
     setLoading(false)
   }
-
   useEffect(() => {
     loadTrips()
   }, [])
@@ -92,10 +122,6 @@ function OngoingTrips() {
     0,
   )
 
-  const totalValue = trips.reduce(
-    (sum, trip) => sum + Number(trip.total_price ?? 0),
-    0,
-  )
 
   return (
     <div className="ongoing-page">
@@ -151,25 +177,6 @@ function OngoingTrips() {
           </div>
         </article>
 
-        <article className="stat-card">
-          <div className="stat-card__top">
-            <div>
-              <p>Nilai Trip Aktif</p>
-              <h2>
-                {loading ? '...' : formatRupiah(totalValue)}
-              </h2>
-            </div>
-
-            <div className="stat-icon">
-              <CreditCard size={21} />
-            </div>
-          </div>
-
-          <div className="stat-card__bottom">
-            <span>Booking</span>
-            <small>total nilai trip aktif</small>
-          </div>
-        </article>
       </section>
 
       <section className="panel">
@@ -254,7 +261,10 @@ function OngoingTrips() {
 
                     <td>
                       <strong>
-                        {formatRupiah(Number(trip.total_price ?? 0))}
+                        {formatCurrency(
+                          Number(trip.total_price ?? 0),
+                          trip.currency,
+                        )}
                       </strong>
                     </td>
 

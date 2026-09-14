@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
   Search,
@@ -1877,7 +1877,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                   <div className="eyebrow">CUSTOMER PROFILE</div>
                   <h2>{selectedCustomer.name}</h2>
                   <p>
-                    {selectedCustomer.country} Â·{' '}
+                    {selectedCustomer.country} Â· {' '}
                     {selectedCustomer.nationality}
                   </p>
                 </div>
@@ -1953,8 +1953,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                   <CalendarDays size={14} />
                   <span>Jadwal</span>
                   <strong>
-                    {formatDate(selectedCustomer.tripStart)} â†’{' '}
-                    {formatDate(selectedCustomer.tripEnd)}
+                    {formatDate(selectedCustomer.tripStart)} → {formatDate(selectedCustomer.tripEnd)}
                   </strong>
                 </div>
 
@@ -2317,7 +2316,7 @@ if (paymentAmount > selectedTripPaymentRemaining) {
 
                     return (
                       <option key={trip.id} value={trip.id}>
-                        {trip.package_name ?? 'Trip'} â€” Sisa {formatPrice(remaining, trip.currency === 'USD' ? 'USD' : 'IDR')}
+                        {trip.package_name ?? 'Trip'} â€”  Sisa {formatPrice(remaining, trip.currency === 'USD' ? 'USD' : 'IDR')}
                       </option>
                     )
                   })}
