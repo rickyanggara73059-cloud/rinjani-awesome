@@ -18,6 +18,7 @@ type UpcomingTrip = {
   guide_name: string | null
   status: string
   total_price: number | null
+  currency: 'IDR' | 'USD' | null
   ticket_status: string
   ticket_number: string | null
   ticket_purchased_at: string | null
@@ -42,7 +43,15 @@ function formatDate(value: string | null) {
   }).format(date)
 }
 
-function formatRupiah(value: number) {
+function formatCurrency(value: number, currency: 'IDR' | 'USD') {
+  if (currency === 'USD') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
+
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -172,8 +181,19 @@ function UpcomingTrips() {
     0,
   )
 
-  const totalValue = filteredTrips.reduce(
-    (sum, trip) => sum + Number(trip.total_price ?? 0),
+  const totalValueIDR = filteredTrips.reduce(
+    (sum, trip) =>
+      trip.currency === 'USD'
+        ? sum
+        : sum + Number(trip.total_price ?? 0),
+    0,
+  )
+
+  const totalValueUSD = filteredTrips.reduce(
+    (sum, trip) =>
+      trip.currency === 'USD'
+        ? sum + Number(trip.total_price ?? 0)
+        : sum,
     0,
   )
 
@@ -280,7 +300,27 @@ function UpcomingTrips() {
             <div>
               <p>Total Nilai Booking</p>
               <h2>
-                {loading ? '...' : formatRupiah(totalValue)}
+                {loading ? (
+                  '...'
+                ) : (
+                  <>
+                    {totalValueIDR > 0 && (
+                      <span style={{ display: 'block' }}>
+                        {formatCurrency(totalValueIDR, 'IDR')}
+                      </span>
+                    )}
+
+                    {totalValueUSD > 0 && (
+                      <span style={{ display: 'block' }}>
+                        {formatCurrency(totalValueUSD, 'USD')}
+                      </span>
+                    )}
+
+                    {totalValueIDR === 0 && totalValueUSD === 0 && (
+                      <span>{formatCurrency(0, 'IDR')}</span>
+                    )}
+                  </>
+                )}
               </h2>
             </div>
 
@@ -381,7 +421,7 @@ function UpcomingTrips() {
                           {formatDate(trip.start_date)}
                         </strong>
 
-                        <span className="date-arrow"> → </span>
+                        <span className="date-arrow"> â†’ </span>
 
                         {formatDate(trip.end_date)}
                       </div>
@@ -426,7 +466,10 @@ function UpcomingTrips() {
 
 <td>
                       <strong>
-                        {formatRupiah(Number(trip.total_price ?? 0))}
+                        {formatCurrency(
+                          Number(trip.total_price ?? 0),
+                          trip.currency === 'USD' ? 'USD' : 'IDR',
+                        )}
                       </strong>
                     </td>
 
@@ -447,6 +490,7 @@ function UpcomingTrips() {
 }
 
 export default UpcomingTrips
+
 
 
 
