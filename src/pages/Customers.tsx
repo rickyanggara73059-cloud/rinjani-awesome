@@ -19,6 +19,7 @@ import {
   FileText,
   UserRound,
   CheckCircle2,
+  Trash2,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 type TripStatus = 'Booked' | 'Ongoing' | 'Completed' | 'Cancelled'
@@ -695,6 +696,8 @@ if (paymentAmount > selectedTripPaymentRemaining) {
     }
   }, [customers, initialCustomerId, loadingCustomers])
 
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null)
+
   async function loadCustomers() {
     setLoadingCustomers(true)
 
@@ -1100,6 +1103,99 @@ if (paymentAmount > selectedTripPaymentRemaining) {
       setSavingTrip(false)
     }
   }
+  const handleDeleteCustomer = async (
+    customerId: string,
+    customerName: string,
+  ) => {
+    const confirmed = window.confirm(
+      'Hapus customer "' +
+        customerName +
+        '"?\n\nSemua trip, pembayaran, dan follow up customer ini juga akan dihapus.\n\nTindakan ini tidak dapat dibatalkan.',
+    )
+
+    if (!confirmed) return
+
+    setDeletingCustomerId(customerId)
+
+    try {
+      const { data: trips, error: tripsLoadError } = await supabase
+        .from('trips')
+        .select('id')
+        .eq('customer_id', customerId)
+
+      if (tripsLoadError) {
+        throw tripsLoadError
+      }
+
+      const tripIds = (trips ?? []).map((trip) => trip.id)
+
+      const { error: followUpsError } = await supabase
+        .from('follow_ups')
+        .delete()
+        .eq('customer_id', customerId)
+
+      if (followUpsError) {
+        throw followUpsError
+      }
+
+      if (tripIds.length > 0) {
+        const { error: paymentsError } = await supabase
+          .from('payments')
+          .delete()
+          .in('trip_id', tripIds)
+
+        if (paymentsError) {
+          throw paymentsError
+        }
+      }
+
+      const { error: tripsError } = await supabase
+        .from('trips')
+        .delete()
+        .eq('customer_id', customerId)
+
+      if (tripsError) {
+        throw tripsError
+      }
+
+      const { error: customerError } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerId)
+
+      if (customerError) {
+        throw customerError
+      }
+
+      await loadCustomers()
+
+      window.alert(
+        'Customer "' + customerName + '" berhasil dihapus.',
+      )
+    } catch (error) {
+      console.error('Gagal menghapus customer:', error)
+
+      const supabaseError = error as {
+        message?: string
+        details?: string
+        hint?: string
+        code?: string
+      }
+
+      window.alert(
+        [
+          'Customer gagal dihapus.',
+          '',
+          'Code: ' + (supabaseError.code ?? '-'),
+          'Message: ' + (supabaseError.message ?? 'Unknown error'),
+          'Details: ' + (supabaseError.details ?? '-'),
+          'Hint: ' + (supabaseError.hint ?? '-'),
+        ].join('\n'),
+      )
+    } finally {
+      setDeletingCustomerId(null)
+    }
+  }
   const handleAddCustomer = async (event: FormEvent) => {
     event.preventDefault()
 
@@ -1436,6 +1532,18 @@ if (paymentAmount > selectedTripPaymentRemaining) {
                           aria-label={`Lihat ${customer.name}`}
                         >
                           <Eye size={16} />
+                        </button>
+
+                        <button
+                          className="view-customer-button"
+                          onClick={() =>
+                            handleDeleteCustomer(customer.id, customer.name)
+                          }
+                          aria-label={'Hapus ' + customer.name}
+                          title={'Hapus ' + customer.name}
+                          disabled={deletingCustomerId === customer.id}
+                        >
+                          <Trash2 size={16} />
                         </button>
                       </td>
                     </tr>
