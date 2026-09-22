@@ -127,17 +127,21 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
 
   const filterNow = new Date()
 
-  const filterDefaultStart = new Date(
-    filterNow.getFullYear(),
-    filterNow.getMonth(),
-    1,
-  ).toISOString().slice(0, 10)
+  const filterDefaultStart = `${filterNow.getFullYear()}-${String(
+    filterNow.getMonth() + 1,
+  ).padStart(2, '0')}-01`
 
-  const filterDefaultEnd = new Date(
+  const filterDefaultEndDate = new Date(
     filterNow.getFullYear(),
     filterNow.getMonth() + 1,
     0,
-  ).toISOString().slice(0, 10)
+  )
+
+  const filterDefaultEnd = `${filterDefaultEndDate.getFullYear()}-${String(
+    filterDefaultEndDate.getMonth() + 1,
+  ).padStart(2, '0')}-${String(
+    filterDefaultEndDate.getDate(),
+  ).padStart(2, '0')}`
 
   const [filterStartDate, setFilterStartDate] =
     useState(filterDefaultStart)
@@ -179,7 +183,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
 
     const now = new Date()
 
-    const today = now.toISOString().slice(0, 10)
+    const today = getTodayDateString()
     const dashboardStartDate = appliedFilterStart
     const dashboardEndDate = appliedFilterEnd
     const monthStart = new Date(
@@ -247,7 +251,13 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
               country
             )
           `)
-          .gte('start_date', dashboardStartDate)
+          .gte(
+            'start_date',
+            dashboardStartDate > today
+              ? dashboardStartDate
+              : today,
+          )
+          .lte('start_date', dashboardEndDate)
           .order('start_date', { ascending: true })
           .limit(5),
 
@@ -302,6 +312,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
           .limit(3),
       ])
 
+
       if (customersResult.error) throw customersResult.error
       if (ongoingResult.error) throw ongoingResult.error
       if (upcomingResult.error) throw upcomingResult.error
@@ -341,6 +352,7 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
         (followUpResult.data ?? []) as unknown as DashboardFollowUp[]
 
       setOngoingTrips(ongoingData)
+
       setUpcomingTrips(upcomingData)
       setFollowUps(followUpData)
 
@@ -1285,68 +1297,4 @@ return (
 }
 
 export default App
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -421,7 +421,7 @@ function UpcomingTrips() {
                           {formatDate(trip.start_date)}
                         </strong>
 
-                        <span className="date-arrow"> â†’ </span>
+                        <span className="date-arrow"> → </span>
 
                         {formatDate(trip.end_date)}
                       </div>
