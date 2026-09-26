@@ -158,6 +158,9 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
 
   const [totalTrips, setTotalTrips] = useState(0)
   const [totalCustomers, setTotalCustomers] = useState(0)
+  const [customerCountries, setCustomerCountries] = useState<
+    Array<{ country: string; count: number }>
+  >([])
   const [monthlyTripValue, setMonthlyTripValue] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
   const [monthlyPaymentIn, setMonthlyPaymentIn] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
   const [monthlyRemainingPayment, setMonthlyRemainingPayment] = useState<CurrencyTotals>({ IDR: 0, USD: 0 })
@@ -400,6 +403,35 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
       const monthlyTripRows =
         (monthlyTripsResult.data ?? []) as unknown as MonthlyTripRow[]
 
+      const customerCountryById = new Map<string, string>()
+
+      monthlyTripRows.forEach((trip) => {
+        const customer = Array.isArray(trip.customer)
+          ? trip.customer[0]
+          : trip.customer
+
+        if (!customer?.id) return
+
+        const country = customer.country?.trim() || 'Tidak diketahui'
+
+        customerCountryById.set(customer.id, country)
+      })
+
+      const countryCounts = new Map<string, number>()
+
+      customerCountryById.forEach((country) => {
+        countryCounts.set(country, (countryCounts.get(country) ?? 0) + 1)
+      })
+
+      const countryData = Array.from(countryCounts.entries())
+        .map(([country, count]) => ({ country, count }))
+        .sort(
+          (a, b) =>
+            b.count - a.count || a.country.localeCompare(b.country),
+        )
+        .slice(0, 5)
+
+      setCustomerCountries(countryData)
       
 
       setTotalTrips(monthlyTripRows.length)
@@ -913,6 +945,43 @@ setMonthlyRemainingPayment({
             )}
           </div>
         </article>
+      </section>
+
+      <section
+        className="panel customer-country-chart"
+        aria-labelledby="customer-country-chart-title"
+        aria-busy={loading}
+      >
+        <div className="panel__header">
+          <div>
+            <h3 id="customer-country-chart-title">Customer Berdasarkan Negara</h3>
+            <p>Maksimal 5 negara dengan customer terbanyak pada periode trip yang dipilih.</p>
+          </div>
+          <BarChart3 className="customer-country-chart__icon" size={21} aria-hidden="true" />
+        </div>
+
+        {loading ? (
+          <p className="customer-country-chart__message" role="status">Memuat data negara...</p>
+        ) : customerCountries.length === 0 ? (
+          <p className="customer-country-chart__message">Belum ada data customer pada periode trip yang dipilih.</p>
+        ) : (
+          <ol className="customer-country-chart__list">
+            {customerCountries.map(({ country, count }) => (
+              <li className="customer-country-chart__item" key={country}>
+                <div className="customer-country-chart__label">
+                  <strong>{country}</strong>
+                  <span>{count.toLocaleString('id-ID')} customer</span>
+                </div>
+                <div className="customer-country-chart__track" aria-hidden="true">
+                  <div
+                    className="customer-country-chart__bar"
+                    style={{ width: `${(count / Math.max(1, customerCountries[0]?.count ?? 0)) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <div className="dashboard-footer">
