@@ -231,8 +231,8 @@ function Dashboard({ onOpenRemainingPayments, onOpenPaymentIn, onOpenOngoingTrip
               country
             )
           `)
-          .lte('start_date', dashboardEndDate)
-          .gte('end_date', dashboardStartDate)
+          .lte('start_date', today)
+          .gte('end_date', today)
           .order('start_date', { ascending: true })
           .limit(5),
 
